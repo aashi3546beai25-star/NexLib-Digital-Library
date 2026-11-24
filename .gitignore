@@ -1,0 +1,27 @@
+# Compiled bytecode and output directories
+out/
+bin/
+target/
+*.class
+
+# Temporary and test database files
+*.ser.bak
+test-*.ser
+test-*.ser.bak
+*.tmp
+*.log
+
+# IDE and Editor configurations
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
