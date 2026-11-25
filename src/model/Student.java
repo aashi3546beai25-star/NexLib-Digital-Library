@@ -33,10 +33,11 @@ public class Student extends User {
     }
 
     /**
-     * Backwards-compatible constructor for existing project signatures.
+     * Convenient constructor taking ID, Name, and Department.
+     * Demonstrates Constructor Overloading with default credentials.
      */
-    public Student(String id, String name, String email) {
-        this(id, name, email, "student123", "General", "N/A", 3);
+    public Student(String id, String name, String department) {
+        this(id, name, (id != null ? id.toLowerCase().trim() : "student") + "@college.edu", "pass123", department, "N/A", 3);
     }
 
     public String getEmail() {

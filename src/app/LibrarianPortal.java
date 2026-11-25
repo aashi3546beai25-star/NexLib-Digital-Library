@@ -108,14 +108,10 @@ public class LibrarianPortal {
         ConsoleFormatter.printSubHeader("ADD NEW STUDENT");
         String id = InputHelper.readLine("Enter Student ID (e.g. STU104): ");
         String name = InputHelper.readLine("Enter Student Name: ");
-        String email = InputHelper.readLine("Enter Email: ");
-        String pass = InputHelper.readPassword("Set Password: ");
         String dept = InputHelper.readLine("Enter Department: ");
-        String phone = InputHelper.readLine("Enter Phone: ");
-        int limit = InputHelper.readInt("Enter Borrow Limit (Default 3): ");
 
-        library.registerStudent(new Student(id, name, email, pass, dept, phone, limit));
-        System.out.println("\n[SUCCESS] Student added successfully! Can now log in using ID: " + id);
+        library.registerStudent(new Student(id, name, dept));
+        System.out.println("\n[SUCCESS] Student added successfully! Can now log in using ID: " + id + " (Password: pass123)");
         InputHelper.pressEnterToContinue();
     }
 
