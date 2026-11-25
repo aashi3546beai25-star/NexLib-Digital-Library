@@ -156,13 +156,19 @@ NexLib_15_Files/
 ├── nexlib-data.ser.bak                 # Automatic fail-safe backup file
 ├── README.md                           # Master project documentation
 ├── PROJECT_REPORT.md                   # University academic evaluation report
+├── EVALUATION_VIVA_GUIDE.md            # Comprehensive viva preparation guide
 ├── out/                                # Compiled Java bytecode (.class files)
-└── src/                                # Core Java Source Code (Exactly 15 files)
+└── src/                                # Core Java Source Code (22 modular files)
     ├── app/
     │   ├── Main.java                   # Application entry point with shutdown hooks
-    │   └── LibraryApp.java             # Terminal menu and presentation controller
+    │   ├── LibraryApp.java             # Lightweight main menu router (~50 lines)
+    │   ├── LibrarianPortal.java        # Dedicated Librarian console (6 core options)
+    │   ├── StudentPortal.java          # Dedicated Student self-service circulation
+    │   └── CatalogPortal.java          # Guest catalog browser & viva demonstration
     ├── exception/
-    │   └── LibraryException.java       # Custom exception hierarchy (nested static classes)
+    │   ├── LibraryException.java       # Base checked domain exception
+    │   ├── BookNotFoundException.java  # Thrown when Book ID or RFID is not found
+    │   └── BookUnavailableException.java# Thrown when book is already checked out
     ├── model/
     │   ├── User.java                   # Abstract base class for all system users
     │   ├── Student.java                # College student entity extending User
@@ -171,12 +177,14 @@ NexLib_15_Files/
     │   ├── IssueRecord.java            # Circulation loan transaction record
     │   └── Reservation.java            # Queue reservation record
     ├── service/
-    │   ├── LibraryService.java         # Core business logic & reporting implementation
+    │   ├── LibraryService.java         # Core business logic & storage coordinator
     │   ├── FineService.java            # Static fine calculations and overdue rules
-    │   └── ReservationService.java     # Queue/LinkedList FIFO waiting list manager
+    │   ├── ReservationService.java     # Queue/LinkedList FIFO waiting list manager
+    │   └── ReportService.java          # Administrative statistical audit reports
     ├── storage/
     │   └── DataStore.java              # Resilient serialization and backup engine
     └── util/
+        ├── ConsoleFormatter.java       # ASCII table formatters and section banners
         ├── InputHelper.java            # Safe terminal scanner preventing input crashes
         └── RFIDScanner.java            # Terminal-simulated RFID hardware transponder
 ```
@@ -194,7 +202,7 @@ NexLib_15_Files/
 cd c:\Users\Asus\Downloads\NexLib_15_Files
 ```
 
-### Step 2: Compile the 15 Source Files
+### Step 2: Compile the 22 Source Files
 Compile all Java source files into the `out` directory:
 
 **Windows PowerShell:**

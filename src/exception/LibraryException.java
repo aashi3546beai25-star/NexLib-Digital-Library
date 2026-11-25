@@ -11,18 +11,6 @@ public class LibraryException extends Exception {
         super(message);
     }
 
-    public static class BookNotFoundException extends LibraryException {
-        public BookNotFoundException(String message) {
-            super(message);
-        }
-    }
-
-    public static class BookUnavailableException extends LibraryException {
-        public BookUnavailableException(String message) {
-            super(message);
-        }
-    }
-
     public static class InvalidRFIDException extends LibraryException {
         public InvalidRFIDException(String message) {
             super(message);
