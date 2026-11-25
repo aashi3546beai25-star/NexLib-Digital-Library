@@ -12,17 +12,19 @@ public class Reservation implements Serializable {
 
     private final String reservationId;
     private final String studentId;
+    private String studentName;
     private final String bookId;
     private String bookTitle;
     private final LocalDate reservationDate;
     private String status; // WAITING, AVAILABLE, FULFILLED, CANCELLED
 
     /**
-     * Primary constructor with explicit reservation ID.
+     * Primary constructor with explicit student name and reservation details.
      */
-    public Reservation(String reservationId, String studentId, String bookId, String bookTitle) {
+    public Reservation(String reservationId, String studentId, String studentName, String bookId, String bookTitle) {
         this.reservationId = reservationId;
         this.studentId = studentId;
+        this.studentName = (studentName != null && !studentName.trim().isEmpty()) ? studentName.trim() : "N/A";
         this.bookId = bookId;
         this.bookTitle = bookTitle != null ? bookTitle : "N/A";
         this.reservationDate = LocalDate.now();
@@ -30,10 +32,17 @@ public class Reservation implements Serializable {
     }
 
     /**
+     * Overloaded constructor without studentName for backwards compatibility.
+     */
+    public Reservation(String reservationId, String studentId, String bookId, String bookTitle) {
+        this(reservationId, studentId, "N/A", bookId, bookTitle);
+    }
+
+    /**
      * Backwards-compatible constructor for existing project signatures.
      */
     public Reservation(String studentId, String bookId) {
-        this("RES-" + System.currentTimeMillis() % 100000, studentId, bookId, "N/A");
+        this("RES-" + System.currentTimeMillis() % 100000, studentId, "N/A", bookId, "N/A");
     }
 
     public String getReservationId() {
@@ -42,6 +51,16 @@ public class Reservation implements Serializable {
 
     public String getStudentId() {
         return studentId;
+    }
+
+    public String getStudentName() {
+        return (studentName != null && !studentName.isEmpty()) ? studentName : "N/A";
+    }
+
+    public void setStudentName(String studentName) {
+        if (studentName != null && !studentName.trim().isEmpty()) {
+            this.studentName = studentName.trim();
+        }
     }
 
     public String getBookId() {
@@ -80,7 +99,7 @@ public class Reservation implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%-10s | %-10s | %-8s | %-12s | %-10s",
-                reservationId, studentId, bookId, reservationDate, status);
+        return String.format("%-10s | %-10s | %-16s | %-8s | %-12s | %-10s",
+                reservationId, studentId, getStudentName(), bookId, reservationDate, status);
     }
 }

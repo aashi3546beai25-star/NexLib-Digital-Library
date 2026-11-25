@@ -104,12 +104,8 @@ public class Book implements Serializable {
 
     @Override
     public String toString() {
+        String status = available ? "AVAILABLE" : "ISSUED";
         return String.format("%-8s | %-26s | %-18s | %-15s | %-12s | %-9s",
-                id,
-                title.length() > 26 ? title.substring(0, 23) + "..." : title,
-                author.length() > 18 ? author.substring(0, 15) + "..." : author,
-                category,
-                rfidTag,
-                available ? "AVAILABLE" : "ISSUED");
+                id, title, author, category, rfidTag, status);
     }
 }

@@ -34,7 +34,8 @@ public class DataStore {
 
         try (ObjectInputStream input = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             Object data = input.readObject();
-            if (data instanceof LibraryService service) {
+            if (data instanceof LibraryService) {
+                LibraryService service = (LibraryService) data;
                 service.rebuildIndices();
                 service.seedInitialDataIfEmpty();
                 System.out.println("[DATASTORE] Successfully loaded library records from: " + fileName);
@@ -47,7 +48,8 @@ public class DataStore {
                 System.out.println("[DATASTORE] Attempting recovery from backup database...");
                 try (ObjectInputStream backupInput = new ObjectInputStream(new BufferedInputStream(new FileInputStream(backup)))) {
                     Object data = backupInput.readObject();
-                    if (data instanceof LibraryService service) {
+                    if (data instanceof LibraryService) {
+                        LibraryService service = (LibraryService) data;
                         service.rebuildIndices();
                         service.seedInitialDataIfEmpty();
                         System.out.println("[DATASTORE] Recovery successful from: " + fileName + ".bak");

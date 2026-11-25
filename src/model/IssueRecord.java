@@ -13,6 +13,7 @@ public class IssueRecord implements Serializable {
 
     private final String recordId;
     private final String studentId;
+    private String studentName;
     private final String bookId;
     private String bookTitle;
     private final LocalDate issueDate;
@@ -21,12 +22,13 @@ public class IssueRecord implements Serializable {
     private double fine;
 
     /**
-     * Primary constructor with explicit record ID and book title.
+     * Primary constructor with explicit student name and book details.
      */
-    public IssueRecord(String recordId, String studentId, String bookId,
+    public IssueRecord(String recordId, String studentId, String studentName, String bookId,
                        String bookTitle, LocalDate issueDate, LocalDate dueDate) {
         this.recordId = recordId;
         this.studentId = studentId;
+        this.studentName = (studentName != null && !studentName.trim().isEmpty()) ? studentName.trim() : "N/A";
         this.bookId = bookId;
         this.bookTitle = bookTitle != null ? bookTitle : "N/A";
         this.issueDate = issueDate;
@@ -36,10 +38,18 @@ public class IssueRecord implements Serializable {
     }
 
     /**
+     * Overloaded constructor without studentName for backwards compatibility.
+     */
+    public IssueRecord(String recordId, String studentId, String bookId,
+                       String bookTitle, LocalDate issueDate, LocalDate dueDate) {
+        this(recordId, studentId, "N/A", bookId, bookTitle, issueDate, dueDate);
+    }
+
+    /**
      * Backwards-compatible constructor for existing project signatures.
      */
     public IssueRecord(String studentId, String bookId, LocalDate issueDate, LocalDate dueDate) {
-        this("TXN-" + System.currentTimeMillis() % 100000, studentId, bookId, "N/A", issueDate, dueDate);
+        this("TXN-" + System.currentTimeMillis() % 100000, studentId, "N/A", bookId, "N/A", issueDate, dueDate);
     }
 
     public String getRecordId() {
@@ -48,6 +58,16 @@ public class IssueRecord implements Serializable {
 
     public String getStudentId() {
         return studentId;
+    }
+
+    public String getStudentName() {
+        return (studentName != null && !studentName.isEmpty()) ? studentName : "N/A";
+    }
+
+    public void setStudentName(String studentName) {
+        if (studentName != null && !studentName.trim().isEmpty()) {
+            this.studentName = studentName.trim();
+        }
     }
 
     public String getBookId() {
@@ -103,8 +123,8 @@ public class IssueRecord implements Serializable {
     @Override
     public String toString() {
         String status = isReturned() ? "RETURNED" : (isOverdue() ? "OVERDUE" : "ACTIVE");
-        return String.format("%-10s | %-10s | %-8s | %-11s | %-11s | %-11s | %-8s | Rs. %-6.2f",
-                recordId, studentId, bookId, issueDate, dueDate,
+        return String.format("%-10s | %-10s | %-16s | %-8s | %-11s | %-11s | %-11s | %-8s | Rs. %-6.2f",
+                recordId, studentId, getStudentName(), bookId, issueDate, dueDate,
                 (returnDate == null ? "Pending" : returnDate.toString()),
                 status, fine);
     }

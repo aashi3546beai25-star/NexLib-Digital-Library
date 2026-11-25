@@ -92,18 +92,17 @@ The application serves two primary user categories:
 
 | Concept | Implementation in NexLib | File Reference |
 |---|---|---|
-| **Classes & Objects** | Models real-world entities (`Book`, `Student`, `Librarian`, `IssueRecord`, `Reservation`, `FineRecord`). | `src/model/*.java` |
+| **Classes & Objects** | Models real-world entities (`Book`, `Student`, `Librarian`, `IssueRecord`, `Reservation`). | `src/model/*.java` |
 | **Encapsulation** | Private instance variables with public accessors/mutators; validation logic inside setters. | `Book.java`, `User.java` |
 | **Inheritance** | Single-table class hierarchy where `Student` and `Librarian` inherit common identity from `User`. | `User.java`, `Student.java`, `Librarian.java` |
-| **Abstraction** | Abstract class `User` declares abstract `getRole()` and `displayProfile()`; `ILibraryService` defines interface contracts. | `User.java`, `ILibraryService.java` |
+| **Abstraction** | Abstract class `User` declares abstract `getRole()` and `displayProfile()`. | `User.java` |
 | **Polymorphism** | Dynamic method dispatch: calling `user.displayProfile()` executes role-specific rendering at runtime. | `LibraryApp.java`, `User.java` |
 | **Method Overloading** | Overloaded `searchBooks(query)` vs `searchBooks(query, category)`; overloaded `FineService.calculate()`; overloaded constructors. | `LibraryService.java`, `FineService.java` |
 | **Method Overriding** | `@Override` used in subclasses for `getRole()`, `displayProfile()`, and across all models for `toString()`. | `Student.java`, `Book.java` |
 | **Constructors** | Parameterized constructors, default constructors, and constructor chaining using `this(...)` and `super(...)`. | `Student.java`, `Book.java` |
-| **Interfaces** | Interface `ILibraryService` establishes business contracts, separating presentation from logic. | `ILibraryService.java` |
 | **Static Members** | Static constants (`FINE_PER_DAY`, `STANDARD_BORROW_DAYS`), static methods in utility and service classes. | `FineService.java`, `InputHelper.java` |
 | **Collections** | `ArrayList` for dynamic records; `HashMap` for O(1) RFID lookup; `Queue`/`LinkedList` for FIFO reservation queues. | `LibraryService.java`, `ReservationService.java` |
-| **Custom Exceptions** | Hierarchical checked exceptions extending `LibraryException` to handle domain-specific failures. | `src/exception/*.java` |
+| **Custom Exceptions** | Hierarchical checked exceptions extending `LibraryException` to handle domain-specific failures. | `src/exception/LibraryException.java` |
 
 ---
 
@@ -158,38 +157,26 @@ NexLib_15_Files/
 ├── README.md                           # Master project documentation
 ├── PROJECT_REPORT.md                   # University academic evaluation report
 ├── out/                                # Compiled Java bytecode (.class files)
-└── src/                                # Core Java Source Code (26 files)
+└── src/                                # Core Java Source Code (Exactly 15 files)
     ├── app/
     │   ├── Main.java                   # Application entry point with shutdown hooks
     │   └── LibraryApp.java             # Terminal menu and presentation controller
     ├── exception/
-    │   ├── LibraryException.java       # Base checked exception
-    │   ├── BookNotFoundException.java  # Thrown when Book ID/RFID not in catalog
-    │   ├── BookUnavailableException.java# Thrown when book is checked out or reserved
-    │   ├── DuplicateBookException.java # Thrown when ID or RFID is already registered
-    │   ├── InvalidInputException.java  # Thrown when user input fails validation
-    │   ├── InvalidRFIDException.java   # Thrown when RFID tag is invalid/blank
-    │   └── StudentNotFoundException.java# Thrown when student is not in directory
+    │   └── LibraryException.java       # Custom exception hierarchy (nested static classes)
     ├── model/
     │   ├── User.java                   # Abstract base class for all system users
     │   ├── Student.java                # College student entity extending User
     │   ├── Librarian.java              # Library administrator entity extending User
     │   ├── Book.java                   # Physical book asset with RFID tag
     │   ├── IssueRecord.java            # Circulation loan transaction record
-    │   ├── Reservation.java            # Queue reservation record
-    │   └── FineRecord.java             # Financial fine assessment and payment record
+    │   └── Reservation.java            # Queue reservation record
     ├── service/
-    │   ├── ILibraryService.java        # Interface contract for library services
-    │   ├── LibraryService.java         # Core business logic implementation
+    │   ├── LibraryService.java         # Core business logic & reporting implementation
     │   ├── FineService.java            # Static fine calculations and overdue rules
-    │   ├── ReservationService.java     # Queue/LinkedList FIFO waiting list manager
-    │   └── ReportService.java          # Statistical auditing and inventory analytics
+    │   └── ReservationService.java     # Queue/LinkedList FIFO waiting list manager
     ├── storage/
     │   └── DataStore.java              # Resilient serialization and backup engine
-    ├── test/
-    │   └── SystemVerificationTest.java # Automated 13-scenario university test suite
     └── util/
-        ├── ConsoleFormatter.java       # Professional ASCII banners and tables
         ├── InputHelper.java            # Safe terminal scanner preventing input crashes
         └── RFIDScanner.java            # Terminal-simulated RFID hardware transponder
 ```
@@ -202,40 +189,26 @@ NexLib_15_Files/
 - Java Development Kit (**JDK 17** or higher installed).
 - Terminal (Windows PowerShell, Command Prompt, or Bash).
 
-### Step 1: Clone or Navigate to the Workspace
+### Step 1: Open Terminal in Project Folder
 ```powershell
 cd c:\Users\Asus\Downloads\NexLib_15_Files
 ```
 
-### Step 2: Compile the Entire Project
+### Step 2: Compile the 15 Source Files
 Compile all Java source files into the `out` directory:
 
 **Windows PowerShell:**
 ```powershell
-javac -d out (Get-ChildItem -Path src -Filter *.java -Recurse | ForEach-Object { $_.FullName })
+& "C:\Program Files\Java\jdk-26.0.1\bin\javac.exe" -d out (Get-ChildItem -Path src -Filter *.java -Recurse | ForEach-Object { $_.FullName })
 ```
+*(Or standard command if Java is on PATH: `javac -d out src/app/*.java src/model/*.java src/service/*.java src/storage/*.java src/util/*.java src/exception/*.java`)*
 
-**Windows Command Prompt (cmd.exe):**
-```cmd
-javac -d out src/app/*.java src/model/*.java src/service/*.java src/storage/*.java src/util/*.java src/exception/*.java src/test/*.java
-```
-
-**Linux / macOS Terminal:**
-```bash
-javac -d out $(find src -name "*.java")
-```
-
-### Step 3: Run the NexLib Application
+### Step 3: Run the Application
 Launch the terminal application:
 ```powershell
-java -cp out app.Main
+& "C:\Program Files\Java\jdk-26.0.1\bin\java.exe" -cp out app.Main
 ```
-
-### Step 4: Run the Automated Verification Test Suite
-Run the 13-point university test harness:
-```powershell
-java -cp out test.SystemVerificationTest
-```
+*(Or standard: `java -cp out app.Main`)*
 
 ---
 
@@ -321,32 +294,14 @@ Fine Policy    : Rs. 5.0 per day for overdue returns.
 
 ---
 
-## 11. Automated Verification Test Suite
+## 11. Built-in Viva & Architecture Guide
 
-The system includes a built-in automated test driver (`test.SystemVerificationTest`) validating all 13 critical requirements:
-
-```
-==============================================================
-  NEXLIB - UNIVERSITY EVALUATION AUTOMATED VERIFICATION SUITE 
-==============================================================
-[PASS] Scenario 1: Add New Book            : Book added and retrieved via ID and RFID.
-[PASS] Scenario 2: Duplicate Detection     : Both Duplicate ID and Duplicate RFID correctly rejected.
-[PASS] Scenario 3: Register Student        : Student registered and verified in directory.
-[PASS] Scenario 4: Authentication Security : Valid logins accepted; invalid credentials rejected.
-[PASS] Scenario 5: Multi-Field Search      : Overloaded searches by title, author, and category succeeded.
-[PASS] Scenario 6: Issue Available Book    : Book checked out, marked ISSUED, loan record created.
-[PASS] Scenario 7: Prevent Double Issue    : Correctly threw BookUnavailableException: Book is currently checked out.
-[PASS] Scenario 8: Return Book             : Book returned successfully; marked AVAILABLE, fine Rs. 0.
-[PASS] Scenario 9: Overdue Fine Calculation : 5 days overdue @ Rs. 5/day = Rs. 25.0
-[PASS] Scenario 10: Reserve Unavailable Book : Reservation placed in WAITING queue at position #1.
-[PASS] Scenario 11: Activate Reservation   : Queued reservation automatically elevated to AVAILABLE.
-[PASS] Scenario 12: Persistence Across Restarts : All books, students, and RFID maps restored.
-[PASS] Scenario 13: Input Integrity Checks : Encapsulation safeguards against null/empty entries.
-
-==============================================================
-  TEST RESULTS SUMMARY: 13 PASSED, 0 FAILED
-==============================================================
-```
+The application includes a built-in Viva & Technical Architecture module accessible directly from Option 4 of the main menu, explaining:
+- **OOP Concepts:** Inheritance (`User` -> `Student`, `Librarian`), Abstraction, Polymorphism (`displayProfile`, method overloads), Encapsulation.
+- **Collections Framework:** `ArrayList` for dynamic records, `HashMap` for O(1) RFID tag lookup, `Queue`/`LinkedList` for FIFO reservation waitlist.
+- **Exception Handling:** `LibraryException` hierarchy handling validation, duplicate, and availability errors.
+- **File Persistence:** Object serialization via `DataStore` with automatic `.bak` fail-safe recovery.
+- **Hardware Simulation:** `RFIDScanner` simulating contactless 13.56 MHz RFID readers.
 
 ---
 

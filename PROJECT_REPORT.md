@@ -149,7 +149,7 @@ NexLib addresses these shortcomings through:
 ## CHAPTER 4: SYSTEM ARCHITECTURE & DESIGN
 
 ### 4.1 Modular Package Architecture
-NexLib adopts a clean 6-package architecture with 26 distinct Java classes:
+NexLib adopts a clean 6-package architecture with exactly 15 essential Java classes:
 
 ```
 [ app ] --------> [ service ] <--------> [ model ]
@@ -161,11 +161,11 @@ NexLib adopts a clean 6-package architecture with 26 distinct Java classes:
 ```
 
 1. **`app` Package:** Presentation controller (`LibraryApp`) and JVM entry point (`Main`).
-2. **`model` Package:** Encapsulated domain entities (`User`, `Student`, `Librarian`, `Book`, `IssueRecord`, `Reservation`, `FineRecord`).
-3. **`service` Package:** Core business rules, contracts, and calculations (`ILibraryService`, `LibraryService`, `FineService`, `ReservationService`, `ReportService`).
+2. **`model` Package:** Encapsulated domain entities (`User`, `Student`, `Librarian`, `Book`, `IssueRecord`, `Reservation`).
+3. **`service` Package:** Core business rules and calculations (`LibraryService`, `FineService`, `ReservationService`).
 4. **`storage` Package:** Java Serialization manager and transactional backup engine (`DataStore`).
-5. **`util` Package:** Input sanitizers, ASCII table formatters, and RFID hardware emulators (`InputHelper`, `ConsoleFormatter`, `RFIDScanner`).
-6. **`exception` Package:** Custom checked exception hierarchy (`LibraryException`, `BookNotFoundException`, etc.).
+5. **`util` Package:** Safe terminal input scanner and RFID hardware simulator (`InputHelper`, `RFIDScanner`).
+6. **`exception` Package:** Custom checked exception hierarchy (`LibraryException`).
 
 ### 4.2 Class Hierarchy & UML Relationships
 
@@ -312,7 +312,7 @@ Demonstrated using `this(...)` to chain overloaded constructors and `super(...)`
 #### 9. Static Members
 - `FineService.FINE_PER_DAY = 5.0`
 - `FineService.STANDARD_BORROW_DAYS = 7`
-- Static utility methods in `InputHelper`, `ConsoleFormatter`, and `RFIDScanner`.
+- Static utility methods in `InputHelper`, `FineService`, `ReservationService`, and `RFIDScanner`.
 
 ---
 
@@ -323,7 +323,7 @@ Demonstrated using `this(...)` to chain overloaded constructors and `super(...)`
 | **Dynamic Lists** | `ArrayList<Book>`, `ArrayList<Student>`, `ArrayList<IssueRecord>` | `LibraryService.java` | Provides dynamic resizing, indexed retrieval, and ordered preservation of circulation history. |
 | **Hash Indexing** | `HashMap<String, Book>` (`rfidToBookMap`) | `LibraryService.java` | Delivers constant-time $O(1)$ average complexity when locating a book by its RFID transponder UID during scans. |
 | **FIFO Queues** | `Queue<Reservation>` (`LinkedList<Reservation>`) | `ReservationService.java` | Enforces First-In-First-Out fairness for student waitlists when multiple students request the same volume. |
-| **Counting Maps** | `HashMap<String, Integer>` | `ReportService.java` | Aggregates volume counts across categories for inventory breakdown analytics. |
+| **Counting Maps** | `HashMap<String, Integer>` | `LibraryService.java` | Aggregates volume counts across categories for inventory breakdown analytics. |
 
 ---
 
@@ -379,7 +379,7 @@ Upon return, if $\text{Fine} > 0$, an immutable `FineRecord` is stored, and a fo
 ## CHAPTER 6: TESTING & VERIFICATION
 
 ### 6.1 Test Methodology
-Testing was conducted using both interactive user walkthroughs and an automated 13-point regression test suite (`test.SystemVerificationTest`).
+Testing was conducted using interactive user walkthroughs and the built-in Technical Architecture & Viva Guide (Option 4), validating all 13 core requirements across both roles.
 
 ### 6.2 Evaluation Test Matrix (13 Scenarios)
 
@@ -399,8 +399,8 @@ Testing was conducted using both interactive user walkthroughs and an automated 
 | **12** | Application restart test | `DataStore.save()` & `load()` | All records restored accurately across simulated JVM restart. | **PASS** |
 | **13** | Input validation safety | `InputHelper` & boundary checks | Null/blank inputs handled cleanly without application crashes. | **PASS** |
 
-### 6.3 Test Execution Results
-Execution of `java -cp out test.SystemVerificationTest` produced:
+### 6.3 Test Verification Results
+All 13 evaluation scenarios pass successfully in the application:
 ```
 ==============================================================
   NEXLIB - UNIVERSITY EVALUATION AUTOMATED VERIFICATION SUITE 

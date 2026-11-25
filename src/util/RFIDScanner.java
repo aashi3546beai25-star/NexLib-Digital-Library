@@ -1,38 +1,34 @@
 package util;
 
 /**
- * Terminal-based emulator for physical High-Frequency (HF) / UHF RFID Readers.
- * Simulates book transponder scanning via interactive console input.
+ * Basic terminal simulation of an RFID tag scanner.
+ * Asks the user to enter the RFID tag of the book.
  */
 public class RFIDScanner {
 
     private RFIDScanner() { }
 
     /**
-     * Primary simulated scan method. Prompts user to scan or enter tag ID.
+     * Default simulated scan method.
      */
     public static String scan() {
-        return scan("Place book on RFID Reader Pad or enter tag ID: ");
+        return scan("Enter book RFID tag: ");
     }
 
     /**
-     * Overloaded scan method with customized prompt context.
+     * Overloaded scan method with custom prompt.
      */
     public static String scan(String customPrompt) {
-        System.out.println("\n+-------------------------------------------------------------+");
-        System.out.println("|  [RFID HARDWARE EMULATOR] 13.56 MHz RFID Transponder Reader |");
-        System.out.println("|  Status: Antenna ACTIVE | Awaiting Tag Placement...         |");
-        System.out.println("+-------------------------------------------------------------+");
-        String tag = InputHelper.readLine(">>> " + customPrompt).toUpperCase();
-        System.out.println(">>> [RFID BEEP!] Captured Tag UID: [" + tag + "]");
+        System.out.println("\n[RFID SCANNER SIMULATION]");
+        String tag = InputHelper.readLine(customPrompt).toUpperCase();
+        System.out.println("Scanned Tag UID: [" + tag + "]");
         return tag;
     }
 
     /**
-     * Utility method to generate standard RFID tag string for auto-tagging.
+     * Generates a simple RFID tag string for a book ID.
      */
     public static String generateTag(String bookId) {
-        String cleanId = bookId.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-        return "RFID-" + cleanId;
+        return "RFID-" + bookId.toUpperCase();
     }
 }
