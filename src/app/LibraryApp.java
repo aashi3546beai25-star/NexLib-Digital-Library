@@ -82,41 +82,40 @@ public class LibraryApp {
         boolean active = true;
         while (active) {
             printHeader("LIBRARIAN CONSOLE | Staff: " + librarian.getName());
-            System.out.println(" 1. Add Book (With RFID)       9. Accept Returned Book");
-            System.out.println(" 2. Update Book Details       10. View Currently Issued Books");
-            System.out.println(" 3. Delete Book               11. View Complete Borrowing History");
-            System.out.println(" 4. View All Books In Catalog 12. Manage Book Reservations");
-            System.out.println(" 5. Search Books              13. View Overdue Fines & Collect");
-            System.out.println(" 6. Add Student (Register)    14. Generate Audit Reports");
-            System.out.println(" 7. View All Students         15. View My Staff Profile");
-            System.out.println(" 8. Issue Book (RFID Scan)    16. Logout");
+            System.out.println(" 1. Add Book (With RFID)");
+            System.out.println(" 2. View All Books In Catalog");
+            System.out.println(" 3. Add Student (Register)");
+            System.out.println(" 4. Issue Book (RFID Scan)");
+            System.out.println(" 5. Return Book (RFID Scan & Fine Check)");
+            System.out.println(" 6. Logout");
             printDivider();
 
-            int choice = InputHelper.readInt("Enter choice (1-16): ", 1, 16);
+            int choice = InputHelper.readInt("Enter choice (1-6): ", 1, 6);
             try {
                 switch (choice) {
                     case 1 -> addBook();
-                    case 2 -> updateBook();
-                    case 3 -> deleteBook();
-                    case 4 -> { printBookTable(library.getBooks()); InputHelper.pressEnterToContinue(); }
-                    case 5 -> searchBooks();
-                    case 6 -> registerStudent();
-                    case 7 -> displayStudents();
-                    case 8 -> issueBookFlow(null);
-                    case 9 -> returnBookFlow(null);
-                    case 10 -> { printIssueTable(library.getCurrentlyIssuedRecords()); InputHelper.pressEnterToContinue(); }
-                    case 11 -> displayHistoryFlow();
-                    case 12 -> manageReservations();
-                    case 13 -> manageFines();
-                    case 14 -> generateReports();
-                    case 15 -> { librarian.displayProfile(); InputHelper.pressEnterToContinue(); }
-                    case 16 -> { active = false; System.out.println("\n[INFO] Librarian logged out."); }
+                    case 2 -> { printBookTable(library.getBooks()); InputHelper.pressEnterToContinue(); }
+                    case 3 -> studentFlow();
+                    case 4 -> issueBookFlow(null);
+                    case 5 -> returnBookFlow(null);
+                    case 6 -> { active = false; System.out.println("\n[INFO] Librarian logged out."); }
                 }
                 store.save(library); // Auto-save changes
             } catch (LibraryException ex) {
                 System.out.println("\n[ERROR] Operation Failed: " + ex.getMessage());
                 InputHelper.pressEnterToContinue();
             }
+        }
+    }
+
+    private void studentFlow() throws LibraryException {
+        printSubHeader("STUDENT MANAGEMENT");
+        System.out.println("1. Add New Student | 2. View All Registered Students");
+        int opt = InputHelper.readInt("Select (1-2): ", 1, 2);
+        if (opt == 1) {
+            registerStudent();
+        } else {
+            displayStudents();
         }
     }
 
