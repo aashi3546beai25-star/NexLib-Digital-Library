@@ -379,7 +379,7 @@ Upon return, if $\text{Fine} > 0$, an immutable `FineRecord` is stored, and a fo
 ## CHAPTER 6: TESTING & VERIFICATION
 
 ### 6.1 Test Methodology
-Testing was conducted using interactive user walkthroughs and the built-in Technical Architecture & Viva Guide (Option 4), validating all 13 core requirements across both roles.
+Testing was conducted using interactive user walkthroughs, validating all 13 core requirements across both roles.
 
 ### 6.2 Evaluation Test Matrix (13 Scenarios)
 

@@ -31,17 +31,15 @@ public class LibraryApp {
             System.out.println("  1. Librarian Portal (Administrative Access)");
             System.out.println("  2. Student Portal (Self-Service Circulation)");
             System.out.println("  3. Browse Catalog & Search Books (Open Guest Access)");
-            System.out.println("  4. Architecture & Viva Demonstration Guide");
-            System.out.println("  5. Save & Exit");
+            System.out.println("  4. Save & Exit");
             ConsoleFormatter.printDivider();
 
-            int choice = InputHelper.readInt("Select portal option (1-5): ", 1, 5);
+            int choice = InputHelper.readInt("Select portal option (1-4): ", 1, 4);
             switch (choice) {
                 case 1 -> librarianPortal.login();
                 case 2 -> studentPortal.login();
                 case 3 -> catalogPortal.browse();
-                case 4 -> catalogPortal.displayVivaGuide();
-                case 5 -> {
+                case 4 -> {
                     store.save(library);
                     System.out.println("\n[SUCCESS] All library records safely saved to disk.");
                     System.out.println("Thank you for using NexLib. Goodbye!");

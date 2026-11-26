@@ -26,7 +26,7 @@
 8. [Complete Project Structure](#8-complete-project-structure)
 9. [Compilation & Execution Instructions](#9-compilation--execution-instructions)
 10. [Sample Terminal Outputs](#10-sample-terminal-outputs)
-11. [Automated Verification Test Suite](#11-automated-verification-test-suite)
+11. [Viva Voce & Technical Architecture Reference](#11-viva-voce--technical-architecture-reference)
 12. [Future Scope](#12-future-scope)
 
 ---
@@ -164,7 +164,7 @@ NexLib_15_Files/
     │   ├── LibraryApp.java             # Lightweight main menu router (~50 lines)
     │   ├── LibrarianPortal.java        # Dedicated Librarian console (6 core options)
     │   ├── StudentPortal.java          # Dedicated Student self-service circulation
-    │   └── CatalogPortal.java          # Guest catalog browser & viva demonstration
+    │   └── CatalogPortal.java          # Guest catalog browser & search module
     ├── exception/
     │   ├── LibraryException.java       # Base checked domain exception
     │   ├── BookNotFoundException.java  # Thrown when Book ID or RFID is not found
@@ -230,10 +230,9 @@ Launch the terminal application:
   1. Librarian Portal (Administrative Access)
   2. Student Portal (Self-Service Circulation)
   3. Browse Catalog & Search Books (Open Guest Access)
-  4. Architecture & Viva Demonstration Guide
-  5. Save & Exit
+  4. Save & Exit
 ----------------------------------------------------------------------------
-Select portal option (1-5): 
+Select portal option (1-4): 
 ```
 
 ### Book Catalog View
@@ -302,14 +301,16 @@ Fine Policy    : Rs. 5.0 per day for overdue returns.
 
 ---
 
-## 11. Built-in Viva & Architecture Guide
+## 11. Viva Voce & Technical Architecture Reference
 
-The application includes a built-in Viva & Technical Architecture module accessible directly from Option 4 of the main menu, explaining:
-- **OOP Concepts:** Inheritance (`User` -> `Student`, `Librarian`), Abstraction, Polymorphism (`displayProfile`, method overloads), Encapsulation.
-- **Collections Framework:** `ArrayList` for dynamic records, `HashMap` for O(1) RFID tag lookup, `Queue`/`LinkedList` for FIFO reservation waitlist.
-- **Exception Handling:** `LibraryException` hierarchy handling validation, duplicate, and availability errors.
-- **File Persistence:** Object serialization via `DataStore` with automatic `.bak` fail-safe recovery.
-- **Hardware Simulation:** `RFIDScanner` simulating contactless 13.56 MHz RFID readers.
+For extensive viva voce Q&A preparation, system architecture breakdown, and demonstration answers across all three evaluation stages, refer to the included guide:
+- Comprehensive preparation document: [`EVALUATION_VIVA_GUIDE.md`](file:///c:/Users/Asus/Downloads/NexLib_15_Files/EVALUATION_VIVA_GUIDE.md)
+- Core architectural topics covered:
+  - **OOP Concepts:** Inheritance (`User` -> `Student`, `Librarian`), Abstraction, Polymorphism (`displayProfile`, method overloads), Encapsulation.
+  - **Collections Framework:** `ArrayList` for dynamic records, `HashMap` for O(1) RFID tag lookup, `Queue`/`LinkedList` for FIFO reservation waitlist.
+  - **Exception Handling:** `LibraryException` hierarchy handling validation, duplicate, and availability errors.
+  - **File Persistence:** Object serialization via `DataStore` with automatic `.bak` fail-safe recovery.
+  - **Hardware Simulation:** `RFIDScanner` simulating contactless 13.56 MHz RFID readers.
 
 ---
 

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Controller for guest catalog browsing and technical viva demonstration.
+ * Controller for guest catalog browsing.
  */
 public class CatalogPortal {
     private final LibraryService library;
@@ -66,15 +66,4 @@ public class CatalogPortal {
         InputHelper.pressEnterToContinue();
     }
 
-    public void displayVivaGuide() {
-        ConsoleFormatter.printHeader("NEXLIB TECHNICAL ARCHITECTURE & VIVA GUIDE");
-        System.out.println("1. OOP Concepts: Classes/Objects, Encapsulation, Inheritance (User -> Student/Librarian),");
-        System.out.println("   Abstraction (User & LibraryService), Polymorphism (displayProfile, searchBooks overloads).");
-        System.out.println("2. Collections: ArrayList (lists), HashMap (O(1) RFID lookup), Queue/LinkedList (FIFO reservations).");
-        System.out.println("3. Custom Exceptions: BookNotFoundException, BookUnavailableException, DuplicateBookException, etc.");
-        System.out.println("4. Persistence: Java Object Serialization (DataStore) with atomic .bak backup.");
-        System.out.println("5. Hardware Simulation: RFIDScanner simulates 13.56 MHz RFID readers via console.");
-        ConsoleFormatter.printDivider();
-        InputHelper.pressEnterToContinue();
-    }
 }
