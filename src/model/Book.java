@@ -3,109 +3,39 @@ package model;
 import java.io.Serializable;
 
 /**
- * Represents a physical college library book equipped with an RFID transponder.
- * Demonstrates OOP Encapsulation, Constructor Overloading, and Data Integrity.
+ * Book model implementing Comparable<Book> for natural sorting (Lectures 23-25).
  */
-public class Book implements Serializable {
+public class Book implements Serializable, Comparable<Book> {
     private static final long serialVersionUID = 1L;
+    private String id, title, author, category, shelf;
+    private boolean available = true;
 
-    private final String id;
-    private String title;
-    private String author;
-    private String category;
-    private final String rfidTag;
-    private boolean available;
-    private String shelfLocation;
-
-    /**
-     * Comprehensive parameterized constructor.
-     */
-    public Book(String id, String title, String author, String category,
-                String rfidTag, String shelfLocation) {
-        this.id = id != null ? id.trim() : "";
+    public Book(String id, String title, String author, String category, String shelf) {
+        this.id = id != null ? id.trim().toUpperCase() : "";
         this.title = title != null ? title.trim() : "";
         this.author = author != null ? author.trim() : "";
-        this.category = (category != null && !category.trim().isEmpty()) ? category.trim() : "General";
-        this.rfidTag = rfidTag != null ? rfidTag.trim().toUpperCase() : "";
-        this.available = true;
-        this.shelfLocation = (shelfLocation != null && !shelfLocation.trim().isEmpty()) ? shelfLocation.trim() : "Rack-A1";
+        this.category = category != null ? category.trim() : "General";
+        this.shelf = shelf != null ? shelf.trim() : "Rack-A1";
     }
 
-    /**
-     * Overloaded constructor with default shelf location.
-     */
-    public Book(String id, String title, String author, String category, String rfidTag) {
-        this(id, title, author, category, rfidTag, "Rack-A1");
-    }
+    public String getId() { return id; }
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+    public String getCategory() { return category; }
+    public String getShelf() { return shelf; }
+    public boolean isAvailable() { return available; }
+    public void setAvailable(boolean a) { this.available = a; }
 
-    /**
-     * Overloaded constructor maintaining backwards compatibility with existing 4-parameter calls.
-     */
-    public Book(String id, String title, String author, String rfidTag) {
-        this(id, title, author, "Computer Science", rfidTag, "Rack-A1");
-    }
-
-    // Getters and Setters demonstrating OOP Encapsulation
-    public String getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        if (title != null && !title.trim().isEmpty()) {
-            this.title = title.trim();
-        }
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        if (author != null && !author.trim().isEmpty()) {
-            this.author = author.trim();
-        }
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        if (category != null && !category.trim().isEmpty()) {
-            this.category = category.trim();
-        }
-    }
-
-    public String getRfidTag() {
-        return rfidTag;
-    }
-
-    public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
-
-    public String getShelfLocation() {
-        return shelfLocation;
-    }
-
-    public void setShelfLocation(String shelfLocation) {
-        if (shelfLocation != null && !shelfLocation.trim().isEmpty()) {
-            this.shelfLocation = shelfLocation.trim();
-        }
+    @Override
+    public int compareTo(Book o) {
+        return this.id.compareToIgnoreCase(o.id); // Natural order by Book ID
     }
 
     @Override
     public String toString() {
-        String status = available ? "AVAILABLE" : "ISSUED";
-        return String.format("%-8s | %-26s | %-18s | %-15s | %-12s | %-9s",
-                id, title, author, category, rfidTag, status);
+        return String.format("%-8s | %-26s | %-18s | %-15s | %-10s | %-9s",
+                id, (title.length() > 24 ? title.substring(0, 23) + "." : title),
+                (author.length() > 16 ? author.substring(0, 15) + "." : author),
+                category, shelf, available ? "AVAILABLE" : "ISSUED");
     }
 }

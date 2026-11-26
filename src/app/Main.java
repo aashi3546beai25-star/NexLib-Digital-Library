@@ -4,25 +4,18 @@ import service.LibraryService;
 import storage.DataStore;
 
 /**
- * Application Entry Point for NexLib - Digital College Library & RFID Book Lending System.
- * Initializes storage, restores database state, registers JVM shutdown hooks for resilience,
- * and launches the menu-driven presentation console.
+ * Main Application Entry Point with JVM shutdown hook.
  */
 public class Main {
-    private static final String DATA_FILE = "nexlib-data.ser";
+    private static final String DB = "nexlib-data.ser";
 
     public static void main(String[] args) {
-        // Initialize persistent datastore
-        DataStore store = new DataStore(DATA_FILE);
-        LibraryService library = store.load();
+        DataStore store = new DataStore(DB);
+        LibraryService svc = store.load();
 
-        // Register graceful shutdown hook to guarantee data safety on abnormal termination
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            store.save(library);
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> store.save(svc)));
 
-        // Launch presentation controller
-        LibraryApp app = new LibraryApp(library, store);
+        LibraryApp app = new LibraryApp(svc, store);
         app.start();
     }
 }

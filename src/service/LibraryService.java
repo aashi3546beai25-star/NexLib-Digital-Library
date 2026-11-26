@@ -4,494 +4,244 @@ import exception.*;
 import exception.LibraryException.*;
 import model.*;
 
-import java.io.Serializable;
+import java.io.*;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Core business service managing books, students, loans, reservations, and reports.
- * Implements Serializable to persist all data.
+ * Main business service coordinating books, students, loans, and reservations.
  */
 public class LibraryService implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // ArrayLists for storing library records
     private List<Book> books = new ArrayList<>();
     private List<Student> students = new ArrayList<>();
     private List<Librarian> librarians = new ArrayList<>();
     private List<IssueRecord> issueRecords = new ArrayList<>();
     private List<Reservation> reservations = new ArrayList<>();
 
-    // HashMap for fast O(1) RFID tag to Book lookup
-    private transient Map<String, Book> rfidToBookMap = new HashMap<>();
+    private transient Map<String, Book> idMap = new HashMap<>();
+    private transient BackgroundAuditDaemon auditDaemon;
+    private transient BookReturnNotifier returnNotifier = new BookReturnNotifier();
 
-    public LibraryService() {
-        rebuildIndices();
-    }
+    public LibraryService() { init(); }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        rebuildIndices();
+        init();
     }
 
-    /**
-     * Rebuilds HashMap index and initializes default admin if needed.
-     */
-    public synchronized void rebuildIndices() {
+    public synchronized void init() {
         if (books == null) books = new ArrayList<>();
         if (students == null) students = new ArrayList<>();
         if (librarians == null) librarians = new ArrayList<>();
         if (issueRecords == null) issueRecords = new ArrayList<>();
         if (reservations == null) reservations = new ArrayList<>();
 
-        if (rfidToBookMap == null) {
-            rfidToBookMap = new HashMap<>();
-        }
-        rfidToBookMap.clear();
+        if (idMap == null) idMap = new HashMap<>();
+        idMap.clear();
+        for (Book b : books) idMap.put(b.getId().toUpperCase(), b);
 
-        for (Book b : books) {
-            if (b.getRfidTag() != null && !b.getRfidTag().isEmpty()) {
-                rfidToBookMap.put(b.getRfidTag().toUpperCase(), b);
-            }
-        }
-
-        if (librarians.isEmpty()) {
-            librarians.add(new Librarian("admin", "Chief Librarian", "admin123", "LIB-001", "Head Librarian"));
-        }
-
-        for (Student s : students) {
-            if (s.getPassword() == null || s.getPassword().trim().isEmpty()) {
-                s.setPassword("pass123");
-            }
-        }
-
-        for (IssueRecord r : issueRecords) {
-            if (r.getStudentName() == null || r.getStudentName().equals("N/A")) {
-                Student s = findStudent(r.getStudentId());
-                if (s != null) r.setStudentName(s.getName());
-            }
-        }
-
-        for (Reservation res : reservations) {
-            if (res.getStudentName() == null || res.getStudentName().equals("N/A")) {
-                Student s = findStudent(res.getStudentId());
-                if (s != null) res.setStudentName(s.getName());
-            }
+        if (librarians.isEmpty()) librarians.add(new Librarian("admin", "Chief Librarian", "admin123", "Head"));
+        if (returnNotifier == null) returnNotifier = new BookReturnNotifier();
+        if (auditDaemon == null) {
+            auditDaemon = new BackgroundAuditDaemon(this, 10000);
+            auditDaemon.start();
         }
     }
 
-    /**
-     * Seeds initial sample college books and students if starting fresh.
-     */
-    public void seedInitialDataIfEmpty() {
+    public void seedInitialData() {
         if (books.isEmpty()) {
             try {
-                addBook(new Book("B101", "Data Structures & Algorithms in Java", "Robert Lafore", "Computer Science", "RFID-CS-101", "Rack-CS-1"));
-                addBook(new Book("B102", "Operating System Concepts", "Silberschatz & Galvin", "Computer Science", "RFID-CS-102", "Rack-CS-1"));
-                addBook(new Book("B103", "Digital Logic & Microprocessors", "M. Morris Mano", "Electronics", "RFID-EC-201", "Rack-EC-2"));
-                addBook(new Book("B104", "Higher Engineering Mathematics", "Dr. B. S. Grewal", "Mathematics", "RFID-MA-301", "Rack-MA-3"));
-                addBook(new Book("B105", "Fluid Mechanics & Thermodynamics", "Frank M. White", "Mechanical", "RFID-ME-401", "Rack-ME-4"));
-                addBook(new Book("B106", "Artificial Intelligence: A Modern Approach", "Russell & Norvig", "Computer Science", "RFID-CS-106", "Rack-CS-2"));
-            } catch (LibraryException ignored) { }
+                addBook(new Book("B101", "Data Structures in Java", "Robert Lafore", "Computer Science", "Rack-CS-1"));
+                addBook(new Book("B102", "Operating System Concepts", "Silberschatz", "Computer Science", "Rack-CS-1"));
+                addBook(new Book("B103", "Digital Logic Design", "Morris Mano", "Electronics", "Rack-EC-2"));
+                addBook(new Book("B104", "Engineering Mathematics", "B.S. Grewal", "Mathematics", "Rack-MA-3"));
+                addBook(new Book("B105", "Fluid Mechanics", "Frank White", "Mechanical", "Rack-ME-4"));
+                addBook(new Book("B106", "Artificial Intelligence", "Russell & Norvig", "Computer Science", "Rack-CS-2"));
+            } catch (LibraryException ignored) {}
         }
-
         if (students.isEmpty()) {
             try {
-                registerStudent(new Student("STU101", "Aarav Sharma", "aarav@college.edu", "pass123", "Computer Science", "+91-9876543210", 3));
-                registerStudent(new Student("STU102", "Diya Patel", "diya@college.edu", "pass123", "Electronics & Comm", "+91-9876543211", 3));
-                registerStudent(new Student("STU103", "Rohan Verma", "rohan@college.edu", "pass123", "Mechanical Eng", "+91-9876543212", 3));
-            } catch (LibraryException ignored) { }
+                registerStudent(new Student("STU101", "Aarav Sharma", "Computer Science"));
+                registerStudent(new Student("STU102", "Diya Patel", "Electronics"));
+                registerStudent(new Student("STU103", "Rohan Verma", "Mechanical"));
+            } catch (LibraryException ignored) {}
         }
     }
 
-    // =========================================================================
-    // BOOK OPERATIONS
-    // =========================================================================
-
-    public synchronized void addBook(Book book) throws LibraryException {
-        if (book == null) throw new InvalidInputException("Book cannot be null.");
-        if (book.getId() == null || book.getId().trim().isEmpty()) {
-            throw new InvalidInputException("Book ID cannot be empty.");
-        }
-        if (book.getRfidTag() == null || book.getRfidTag().trim().isEmpty()) {
-            throw new InvalidRFIDException("Book RFID tag cannot be empty.");
-        }
-        if (findBookById(book.getId()) != null) {
-            throw new DuplicateBookException("Book ID '" + book.getId() + "' already exists.");
-        }
-
-        String tag = book.getRfidTag().toUpperCase();
-        if (rfidToBookMap.containsKey(tag)) {
-            throw new DuplicateBookException("RFID tag '" + tag + "' is already assigned.");
-        }
-
-        books.add(book);
-        rfidToBookMap.put(tag, book);
-    }
-
-    public synchronized void updateBook(String id, String title, String author, String cat, String shelf) throws LibraryException {
-        Book b = findBookById(id);
-        if (b == null) throw new BookNotFoundException("No book found with ID: " + id);
-        if (title != null && !title.trim().isEmpty()) b.setTitle(title);
-        if (author != null && !author.trim().isEmpty()) b.setAuthor(author);
-        if (cat != null && !cat.trim().isEmpty()) b.setCategory(cat);
-        if (shelf != null && !shelf.trim().isEmpty()) b.setShelfLocation(shelf);
+    public synchronized void addBook(Book b) throws LibraryException {
+        if (b == null || b.getId().isEmpty()) throw new InvalidInputException("Book cannot be null or empty.");
+        if (idMap.containsKey(b.getId().toUpperCase())) throw new DuplicateBookException("Book ID already exists: " + b.getId());
+        books.add(b);
+        idMap.put(b.getId().toUpperCase(), b);
     }
 
     public synchronized void deleteBook(String id) throws LibraryException {
-        Book b = findBookById(id);
-        if (b == null) throw new BookNotFoundException("No book found with ID: " + id);
-        if (!b.isAvailable()) {
-            throw new BookUnavailableException("Cannot delete book '" + b.getTitle() + "' because it is currently issued.");
-        }
+        Book b = findBook(id);
+        if (b == null) throw new BookNotFoundException("Book not found: " + id);
+        if (!b.isAvailable()) throw new BookUnavailableException("Cannot delete currently checked out book.");
         books.remove(b);
-        rfidToBookMap.remove(b.getRfidTag().toUpperCase());
+        idMap.remove(b.getId().toUpperCase());
     }
 
-    public Book findBookById(String id) {
-        if (id == null) return null;
-        for (Book b : books) {
-            if (b.getId().equalsIgnoreCase(id.trim())) return b;
-        }
-        return null;
-    }
+    public Book findBook(String id) { return id != null ? idMap.get(id.trim().toUpperCase()) : null; }
+    public List<Book> getBooks() { return books; }
 
-    public Book findBookByRfid(String rfid) {
-        if (rfid == null) return null;
-        return rfidToBookMap.get(rfid.trim().toUpperCase());
-    }
-
-    public List<Book> getBooks() {
-        return books;
-    }
-
-    public List<Book> searchBooks(String query) {
-        List<Book> list = new ArrayList<>();
-        if (query == null || query.trim().isEmpty()) return list;
-        String q = query.toLowerCase().trim();
-        for (Book b : books) {
-            if (b.getId().toLowerCase().contains(q)
-                    || b.getTitle().toLowerCase().contains(q)
-                    || b.getAuthor().toLowerCase().contains(q)
-                    || b.getCategory().toLowerCase().contains(q)
-                    || b.getRfidTag().toLowerCase().contains(q)) {
-                list.add(b);
-            }
-        }
-        return list;
-    }
-
-    public List<Book> searchBooks(String query, String category) {
-        List<Book> list = new ArrayList<>();
-        String q = (query != null) ? query.toLowerCase().trim() : "";
-        String cat = (category != null) ? category.toLowerCase().trim() : "";
-
-        for (Book b : books) {
-            boolean matchCat = cat.isEmpty() || b.getCategory().toLowerCase().contains(cat);
-            boolean matchQ = q.isEmpty()
-                    || b.getTitle().toLowerCase().contains(q)
-                    || b.getAuthor().toLowerCase().contains(q)
-                    || b.getId().toLowerCase().contains(q);
-
-            if (matchCat && matchQ) list.add(b);
-        }
-        return list;
-    }
-
-    // =========================================================================
-    // STUDENT OPERATIONS
-    // =========================================================================
-
-    public synchronized void registerStudent(Student student) throws LibraryException {
-        if (student == null || student.getId() == null || student.getId().trim().isEmpty()) {
-            throw new InvalidInputException("Student details are invalid.");
-        }
-        if (findStudent(student.getId()) != null) {
-            throw new LibraryException("Student ID '" + student.getId() + "' already exists.");
-        }
-        students.add(student);
+    public synchronized void registerStudent(Student s) throws LibraryException {
+        if (s == null || s.getId().isEmpty()) throw new InvalidInputException("Student details invalid.");
+        if (findStudent(s.getId()) != null) throw new LibraryException("Student ID already exists: " + s.getId());
+        students.add(s);
     }
 
     public Student findStudent(String id) {
         if (id == null) return null;
-        for (Student s : students) {
-            if (s.getId().equalsIgnoreCase(id.trim())) return s;
-        }
+        for (Student s : students) if (s.getId().equalsIgnoreCase(id.trim())) return s;
         return null;
     }
+    public List<Student> getStudents() { return students; }
 
-    public List<Student> getStudents() {
-        return students;
-    }
+    public synchronized IssueRecord issueBook(String stuId, String bookId) throws LibraryException {
+        Student stu = findStudent(stuId);
+        if (stu == null) throw new StudentNotFoundException("Student ID not found: " + stuId);
+        Book book = findBook(bookId);
+        if (book == null) throw new BookNotFoundException("Book not found: " + bookId);
+        if (!book.isAvailable()) throw new BookUnavailableException("Book is already checked out: " + book.getTitle());
 
-    // =========================================================================
-    // CIRCULATION & RFID LENDING
-    // =========================================================================
+        long count = issueRecords.stream().filter(r -> r.getStudentId().equalsIgnoreCase(stuId) && !r.isReturned()).count();
+        if (count >= stu.getMaxBooks()) throw new LibraryException("Borrow limit reached: " + stu.getMaxBooks() + " books.");
 
-    public synchronized IssueRecord issueBook(String studentId, String rfid) throws LibraryException {
-        Student student = findStudent(studentId);
-        if (student == null) {
-            throw new StudentNotFoundException("Student ID '" + studentId + "' is not registered.");
-        }
-        if (rfid == null || rfid.trim().isEmpty()) {
-            throw new InvalidRFIDException("RFID tag cannot be empty.");
-        }
-
-        Book book = findBookByRfid(rfid);
-        if (book == null) {
-            throw new BookNotFoundException("No book matches RFID tag: [" + rfid + "].");
-        }
-        if (!book.isAvailable()) {
-            throw new BookUnavailableException("Book '" + book.getTitle() + "' (ID: " + book.getId() + ") is currently checked out.");
-        }
-
-        int currentBorrowCount = 0;
-        for (IssueRecord r : issueRecords) {
-            if (r.getStudentId().equalsIgnoreCase(studentId) && !r.isReturned()) {
-                currentBorrowCount++;
-            }
-        }
-        if (currentBorrowCount >= student.getMaxBooksAllowed()) {
-            throw new LibraryException("Student reached maximum limit of " + student.getMaxBooksAllowed() + " books.");
-        }
-
-        Queue<Reservation> waitingQueue = ReservationService.getWaitingQueue(reservations, book.getId());
-        if (!waitingQueue.isEmpty()) {
-            Reservation top = waitingQueue.peek();
-            if (!top.getStudentId().equalsIgnoreCase(studentId)) {
-                throw new BookUnavailableException("This book is reserved for student ID '" + top.getStudentId() + "'.");
-            } else {
-                top.fulfill();
-            }
-        }
-
-        for (Reservation r : reservations) {
-            if (r.getBookId().equalsIgnoreCase(book.getId())
-                    && r.getStudentId().equalsIgnoreCase(studentId)
-                    && "AVAILABLE".equalsIgnoreCase(r.getStatus())) {
-                r.fulfill();
-                break;
-            }
+        Queue<Reservation> q = ReservationService.getWaitingQueue(reservations, book.getId());
+        if (!q.isEmpty()) {
+            Reservation top = q.peek();
+            if (!top.getStudentId().equalsIgnoreCase(stuId)) throw new BookUnavailableException("Reserved for student: " + top.getStudentId());
+            top.setStatus("FULFILLED");
         }
 
         book.setAvailable(false);
-        LocalDate issueDate = LocalDate.now();
-        LocalDate dueDate = issueDate.plusDays(FineService.STANDARD_BORROW_DAYS);
-        String txnId = "TXN-" + (issueRecords.size() + 101);
-
-        IssueRecord record = new IssueRecord(txnId, studentId, student.getName(), book.getId(), book.getTitle(), issueDate, dueDate);
-        issueRecords.add(record);
-        return record;
+        LocalDate now = LocalDate.now();
+        IssueRecord r = new IssueRecord("TXN-" + (issueRecords.size() + 101), stu.getId(), stu.getName(), book.getId(), book.getTitle(), now, now.plusDays(7));
+        issueRecords.add(r);
+        if (auditDaemon != null) auditDaemon.scan();
+        return r;
     }
 
-    public synchronized double returnBook(String studentId, String rfid) throws LibraryException {
-        Student student = findStudent(studentId);
-        if (student == null) throw new StudentNotFoundException("Student ID not found.");
+    public synchronized double returnBook(String stuId, String bookId) throws LibraryException {
+        Student stu = findStudent(stuId);
+        if (stu == null) throw new StudentNotFoundException("Student not found.");
+        Book book = findBook(bookId);
+        if (book == null) throw new BookNotFoundException("Book not found.");
 
-        Book book = findBookByRfid(rfid);
-        if (book == null) throw new BookNotFoundException("No book matches RFID: [" + rfid + "].");
+        IssueRecord r = issueRecords.stream()
+                .filter(rec -> rec.getStudentId().equalsIgnoreCase(stuId) && rec.getBookId().equalsIgnoreCase(book.getId()) && !rec.isReturned())
+                .findFirst().orElseThrow(() -> new LibraryException("No active loan found."));
 
-        IssueRecord target = null;
-        for (IssueRecord r : issueRecords) {
-            if (r.getStudentId().equalsIgnoreCase(studentId)
-                    && r.getBookId().equalsIgnoreCase(book.getId())
-                    && !r.isReturned()) {
-                target = r;
-                break;
-            }
-        }
-
-        if (target == null) {
-            throw new LibraryException("No active loan found for Student '" + studentId + "' and Book '" + book.getTitle() + "'.");
-        }
-
-        LocalDate returnDate = LocalDate.now();
-        double fine = FineService.calculate(target.getDueDate(), returnDate);
-        target.completeReturn(returnDate, fine);
+        LocalDate today = LocalDate.now();
+        double fine = FineService.calculate(r.getDueDate(), today);
+        r.completeReturn(today, fine);
         book.setAvailable(true);
 
-        if (fine > 0) {
-            FineService.printFineReceipt(studentId, book.getId(), target.getDueDate(), returnDate, fine);
-        }
+        if (fine > 0) FineService.printReceipt(stuId, bookId, r.getDueDate(), today, fine);
+        if (returnNotifier != null) returnNotifier.signalBookReturned(book.getId());
 
-        Reservation activated = ReservationService.activateNext(reservations, book.getId());
-        if (activated != null) {
-            System.out.println("[RESERVATION NOTIFICATION] Book reserved for next queued student ID: " + activated.getStudentId());
+        Queue<Reservation> q = ReservationService.getWaitingQueue(reservations, book.getId());
+        if (!q.isEmpty()) {
+            Reservation next = q.peek();
+            next.setStatus("AVAILABLE");
+            System.out.println("RESERVATION ALERT: Book reserved for next queued student: " + next.getStudentId());
         }
-
+        if (auditDaemon != null) auditDaemon.scan();
         return fine;
     }
 
-    public List<IssueRecord> getHistory(String studentId) {
-        List<IssueRecord> list = new ArrayList<>();
-        if (studentId == null) return list;
-        for (IssueRecord r : issueRecords) {
-            if (r.getStudentId().equalsIgnoreCase(studentId.trim())) list.add(r);
-        }
-        return list;
-    }
+    public synchronized Reservation reserveBook(String stuId, String bookId) throws LibraryException {
+        Student stu = findStudent(stuId);
+        if (stu == null) throw new StudentNotFoundException("Student not registered.");
+        Book book = findBook(bookId);
+        if (book == null) throw new BookNotFoundException("Book not found.");
 
-    public List<IssueRecord> getAllIssueRecords() {
-        return issueRecords;
-    }
+        boolean exists = reservations.stream().anyMatch(r -> r.getStudentId().equalsIgnoreCase(stuId) && r.getBookId().equalsIgnoreCase(bookId) && !"FULFILLED".equals(r.getStatus()));
+        if (exists) throw new LibraryException("Active reservation already exists.");
 
-    public List<IssueRecord> getCurrentlyIssuedRecords() {
-        List<IssueRecord> list = new ArrayList<>();
-        for (IssueRecord r : issueRecords) {
-            if (!r.isReturned()) list.add(r);
-        }
-        return list;
-    }
-
-    // =========================================================================
-    // RESERVATIONS
-    // =========================================================================
-
-    public synchronized Reservation reserveBook(String studentId, String bookId) throws LibraryException {
-        Student stu = findStudent(studentId);
-        if (stu == null) throw new StudentNotFoundException("Student ID not registered.");
-
-        Book book = findBookById(bookId);
-        if (book == null) throw new BookNotFoundException("Book ID does not exist.");
-
-        if (ReservationService.hasActiveReservation(reservations, studentId, bookId)) {
-            throw new LibraryException("Student already has an active reservation for this book.");
-        }
-
-        String resId = "RES-" + (reservations.size() + 301);
-        Reservation res = new Reservation(resId, studentId, stu.getName(), bookId, book.getTitle());
-        if (book.isAvailable()) {
-            res.setStatus("AVAILABLE");
-        }
+        Reservation res = new Reservation("RES-" + (reservations.size() + 201), stuId, stu.getName(), book.getId(), book.getTitle());
+        if (book.isAvailable()) res.setStatus("AVAILABLE");
         reservations.add(res);
         return res;
     }
 
-    public int getReservationPosition(Reservation reservation) {
-        return ReservationService.getPositionInQueue(reservations, reservation);
+    public List<IssueRecord> getHistory(String stuId) {
+        return issueRecords.stream().filter(r -> r.getStudentId().equalsIgnoreCase(stuId)).collect(Collectors.toList());
     }
+    public List<IssueRecord> getAllLoans() { return issueRecords; }
+    public List<Reservation> getReservations() { return reservations; }
 
-    public List<Reservation> getReservations() {
-        return reservations;
+    public double getStudentPendingFineTotal(String stuId) {
+        return getHistory(stuId).stream().filter(r -> r.isReturned() && r.getFine() > 0).mapToDouble(IssueRecord::getFine).sum();
     }
-
-    public synchronized void cancelReservation(String resId, String studentId) throws LibraryException {
-        for (Reservation r : reservations) {
-            if (r.getReservationId().equalsIgnoreCase(resId)) {
-                r.cancel();
-                return;
-            }
-        }
-        throw new LibraryException("Reservation ID not found.");
-    }
-
-    // =========================================================================
-    // FINE SETTLEMENT
-    // =========================================================================
-
-    public double getStudentPendingFineTotal(String studentId) {
-        double total = 0.0;
-        for (IssueRecord r : getHistory(studentId)) {
-            if (r.isReturned() && r.getFine() > 0) {
-                total += r.getFine();
-            }
-        }
-        return total;
-    }
-
-    public synchronized boolean payStudentFine(String studentId) throws LibraryException {
-        boolean paid = false;
-        for (IssueRecord r : getHistory(studentId)) {
-            if (r.isReturned() && r.getFine() > 0) {
-                r.completeReturn(r.getReturnDate(), 0.0);
-                paid = true;
-            }
-        }
-        if (!paid) throw new LibraryException("No pending fines to settle.");
+    public synchronized boolean payStudentFine(String stuId) throws LibraryException {
+        List<IssueRecord> dues = getHistory(stuId).stream().filter(r -> r.isReturned() && r.getFine() > 0).toList();
+        if (dues.isEmpty()) throw new LibraryException("No pending fines.");
+        dues.forEach(r -> r.completeReturn(r.getReturnDate(), 0.0));
         return true;
     }
 
-    // =========================================================================
-    // AUTHENTICATION
-    // =========================================================================
-
-    public Librarian authenticateLibrarian(String username, String password) {
-        if (username == null || password == null) return null;
-        for (Librarian lib : librarians) {
-            if (lib.getId().equalsIgnoreCase(username.trim()) && lib.verifyPassword(password)) {
-                return lib;
+    public Set<String> getUniqueCategoriesSorted() {
+        Set<String> set = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        books.forEach(b -> set.add(b.getCategory()));
+        return set;
+    }
+    public Set<String> getActiveBorrowerIds() {
+        return issueRecords.stream().filter(r -> !r.isReturned()).map(IssueRecord::getStudentId).collect(Collectors.toCollection(HashSet::new));
+    }
+    public Map<String, List<Book>> getBooksGroupedByCategory() {
+        Map<String, List<Book>> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        books.forEach(b -> map.computeIfAbsent(b.getCategory(), k -> new ArrayList<>()).add(b));
+        return map;
+    }
+    public List<Book> getBooksReversedWithListIterator() {
+        List<Book> rev = new ArrayList<>();
+        ListIterator<Book> it = books.listIterator(books.size());
+        while (it.hasPrevious()) rev.add(it.previous());
+        return rev;
+    }
+    public int purgeOldReturnedRecords(int days) {
+        int c = 0;
+        Iterator<IssueRecord> it = issueRecords.iterator();
+        while (it.hasNext()) {
+            IssueRecord r = it.next();
+            if (r.isReturned() && ChronoUnit.DAYS.between(r.getReturnDate(), LocalDate.now()) > days) {
+                it.remove();
+                c++;
             }
         }
-        return null;
+        return c;
+    }
+    public List<Book> getSortedBooks(Comparator<Book> comp) {
+        return books.stream().sorted(comp).collect(Collectors.toList());
     }
 
-    public Student authenticateStudent(String studentId, String password) {
-        if (studentId == null || password == null) return null;
-        for (Student stu : students) {
-            if (stu.getId().equalsIgnoreCase(studentId.trim()) && stu.verifyPassword(password)) {
-                return stu;
-            }
-        }
-        return null;
+    public List<Book> getAvailableBooksStream() {
+        return books.stream().filter(Book::isAvailable).collect(Collectors.toList());
+    }
+    public List<Book> searchBooks(String q, String cat) {
+        String query = q != null ? q.trim().toLowerCase() : "";
+        String category = cat != null ? cat.trim().toLowerCase() : "";
+        return books.stream()
+                .filter(b -> category.isEmpty() || b.getCategory().toLowerCase().contains(category))
+                .filter(b -> query.isEmpty() || b.getId().toLowerCase().contains(query)
+                        || b.getTitle().toLowerCase().contains(query) || b.getAuthor().toLowerCase().contains(query))
+                .collect(Collectors.toList());
     }
 
-    // =========================================================================
-    // REPORTS (Built-in directly)
-    // =========================================================================
-
-    public void printExecutiveSummary() {
-        System.out.println("\n============================================================================");
-        System.out.println("                 NEXLIB EXECUTIVE AUDIT REPORT");
-        System.out.println("============================================================================");
-
-        int totalBooks = books.size();
-        int availableBooks = 0;
-        for (Book b : books) {
-            if (b.isAvailable()) availableBooks++;
-        }
-        int activeLoans = getCurrentlyIssuedRecords().size();
-
-        double totalFine = 0.0;
-        for (IssueRecord r : issueRecords) {
-            totalFine += r.getFine();
-        }
-
-        System.out.println("Total Catalog Titles     : " + totalBooks);
-        System.out.println("Books Available on Shelf : " + availableBooks);
-        System.out.println("Books Currently Issued   : " + activeLoans);
-        System.out.println("Total Registered Students: " + students.size());
-        System.out.println("Total Active Reservations: " + reservations.size());
-        System.out.printf("Total Overdue Fines      : Rs. %.2f%n", totalFine);
-        System.out.println("----------------------------------------------------------------------------");
+    public Librarian authLibrarian(String u, String p) {
+        return librarians.stream().filter(l -> l.getId().equalsIgnoreCase(u) && l.verifyPassword(p)).findFirst().orElse(null);
+    }
+    public Student authStudent(String id, String p) {
+        return students.stream().filter(s -> s.getId().equalsIgnoreCase(id) && s.verifyPassword(p)).findFirst().orElse(null);
     }
 
-    public void printOverdueReport() {
-        System.out.println("\n----------------------------------------------------------------------------");
-        System.out.println("                         OVERDUE BOOKS AUDIT");
-        System.out.println("----------------------------------------------------------------------------");
-        boolean found = false;
-        for (IssueRecord r : issueRecords) {
-            if (!r.isReturned() && r.isOverdue()) {
-                found = true;
-                System.out.println("Student: " + r.getStudentId() + " (" + r.getStudentName() + ") | Book: " + r.getBookId()
-                        + " | Due: " + r.getDueDate() + " | Overdue: " + r.getDaysOverdue() + " days");
-            }
-        }
-        if (!found) {
-            System.out.println("No overdue books at present. All loans are on time.");
-        }
-    }
-
-    public void printCategoryDistribution() {
-        System.out.println("\n----------------------------------------------------------------------------");
-        System.out.println("                     BOOK CATEGORY DISTRIBUTION");
-        System.out.println("----------------------------------------------------------------------------");
-        Map<String, Integer> map = new HashMap<>();
-        for (Book b : books) {
-            map.put(b.getCategory(), map.getOrDefault(b.getCategory(), 0) + 1);
-        }
-        for (Map.Entry<String, Integer> e : map.entrySet()) {
-            System.out.printf("%-30s : %d book(s)%n", e.getKey(), e.getValue());
-        }
-    }
+    public BackgroundAuditDaemon getAuditDaemon() { return auditDaemon; }
+    public BookReturnNotifier getReturnNotifier() { return returnNotifier; }
 }

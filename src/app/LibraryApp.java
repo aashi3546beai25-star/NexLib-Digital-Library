@@ -6,43 +6,36 @@ import util.ConsoleFormatter;
 import util.InputHelper;
 
 /**
- * Main application coordinator for NexLib.
- * Routes users to Librarian, Student, or Open Catalog portals.
+ * Top-level menu coordinator routing users to Librarian, Student, or Guest portals.
  */
 public class LibraryApp {
-    private final LibraryService library;
+    private final LibraryService svc;
     private final DataStore store;
-    private final LibrarianPortal librarianPortal;
-    private final StudentPortal studentPortal;
-    private final CatalogPortal catalogPortal;
 
-    public LibraryApp(LibraryService library, DataStore store) {
-        this.library = library;
+    public LibraryApp(LibraryService svc, DataStore store) {
+        this.svc = svc;
         this.store = store;
-        this.librarianPortal = new LibrarianPortal(library, store);
-        this.studentPortal = new StudentPortal(library, store);
-        this.catalogPortal = new CatalogPortal(library);
     }
 
     public void start() {
         boolean running = true;
         while (running) {
-            ConsoleFormatter.printHeader("NEXLIB - DIGITAL COLLEGE LIBRARY & RFID BOOK LENDING SYSTEM");
-            System.out.println("  1. Librarian Portal (Administrative Access)");
-            System.out.println("  2. Student Portal (Self-Service Circulation)");
-            System.out.println("  3. Browse Catalog & Search Books (Open Guest Access)");
+            ConsoleFormatter.printHeader("NEXLIB - DIGITAL COLLEGE LIBRARY MANAGEMENT SYSTEM");
+            System.out.println("  1. Librarian Portal");
+            System.out.println("  2. Student Portal");
+            System.out.println("  3. Browse Catalog & Search Books");
             System.out.println("  4. Save & Exit");
             ConsoleFormatter.printDivider();
 
-            int choice = InputHelper.readInt("Select portal option (1-4): ", 1, 4);
+            int choice = InputHelper.readInt("Select portal option: ", 1, 4);
             switch (choice) {
-                case 1 -> librarianPortal.login();
-                case 2 -> studentPortal.login();
-                case 3 -> catalogPortal.browse();
+                case 1 -> new LibrarianPortal(svc, store).login();
+                case 2 -> new StudentPortal(svc, store).login();
+                case 3 -> new CatalogPortal(svc).browse();
                 case 4 -> {
-                    store.save(library);
-                    System.out.println("\n[SUCCESS] All library records safely saved to disk.");
-                    System.out.println("Thank you for using NexLib. Goodbye!");
+                    if (svc.getAuditDaemon() != null) svc.getAuditDaemon().stop();
+                    store.save(svc);
+                    System.out.println("\nSUCCESS: All records safely saved. Goodbye!");
                     running = false;
                 }
             }

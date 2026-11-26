@@ -1,69 +1,43 @@
 package app;
 
-import model.Book;
 import service.LibraryService;
 import util.ConsoleFormatter;
 import util.InputHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Controller for guest catalog browsing.
+ * Open guest browsing portal for prospective students.
  */
 public class CatalogPortal {
-    private final LibraryService library;
+    private final LibraryService svc;
 
-    public CatalogPortal(LibraryService library) {
-        this.library = library;
-    }
+    public CatalogPortal(LibraryService s) { this.svc = s; }
 
     public void browse() {
-        boolean back = false;
-        while (!back) {
-            ConsoleFormatter.printHeader("OPEN CATALOG BROWSER (GUEST ACCESS)");
-            System.out.println(" 1. View All Books In Catalog");
+        boolean active = true;
+        while (active) {
+            ConsoleFormatter.printHeader("OPEN CATALOG BROWSER");
+            System.out.println(" 1. View All Books");
             System.out.println(" 2. Search Books");
             System.out.println(" 3. View Available Books Only");
-            System.out.println(" 4. Back to Main Menu");
+            System.out.println(" 4. View Unique Categories");
+            System.out.println(" 5. Back to Main Menu");
             ConsoleFormatter.printDivider();
 
-            int choice = InputHelper.readInt("Choice (1-4): ", 1, 4);
-            switch (choice) {
-                case 1 -> { ConsoleFormatter.printBookTable(library.getBooks()); InputHelper.pressEnterToContinue(); }
-                case 2 -> searchBooks();
-                case 3 -> displayAvailableBooks();
-                case 4 -> back = true;
+            int ch = InputHelper.readInt("Choice: ", 1, 5);
+            switch (ch) {
+                case 1 -> ConsoleFormatter.printBookTable(svc.getBooks());
+                case 2 -> {
+                    String q = InputHelper.readLine("Keyword: ");
+                    ConsoleFormatter.printBookTable(svc.searchBooks(q, ""));
+                }
+                case 3 -> ConsoleFormatter.printBookTable(svc.getAvailableBooksStream());
+                case 4 -> {
+                    System.out.println("\nCategories:");
+                    svc.getUniqueCategoriesSorted().forEach(c -> System.out.println(" • " + c));
+                }
+                case 5 -> active = false;
             }
+            InputHelper.pressEnterToContinue();
         }
     }
-
-    private void searchBooks() {
-        ConsoleFormatter.printSubHeader("SEARCH BOOK CATALOG");
-        System.out.println("1. General Search (Title, Author, Category, ID) | 2. Filter by Category");
-        int mode = InputHelper.readInt("Select mode (1-2): ", 1, 2);
-
-        List<Book> results;
-        if (mode == 1) {
-            String q = InputHelper.readLine("Enter search keyword: ");
-            results = library.searchBooks(q);
-        } else {
-            String cat = InputHelper.readLine("Enter Category: ");
-            String q = InputHelper.readLine("Enter Keyword (optional): ", true);
-            results = library.searchBooks(q, cat);
-        }
-        ConsoleFormatter.printBookTable(results);
-        InputHelper.pressEnterToContinue();
-    }
-
-    private void displayAvailableBooks() {
-        List<Book> available = new ArrayList<>();
-        for (Book b : library.getBooks()) {
-            if (b.isAvailable()) available.add(b);
-        }
-        ConsoleFormatter.printBookTable(available);
-        System.out.println("Available for borrowing: " + available.size() + " book(s).");
-        InputHelper.pressEnterToContinue();
-    }
-
 }

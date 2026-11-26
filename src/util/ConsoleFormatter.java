@@ -2,27 +2,24 @@ package util;
 
 import model.Book;
 import model.IssueRecord;
-import model.Reservation;
 import model.Student;
-
 import java.util.List;
 
 /**
- * Utility for uniform console output, ASCII tables, and section headers.
+ * Uniform ASCII table layout formatter.
  */
 public class ConsoleFormatter {
+    private ConsoleFormatter() {}
 
-    private ConsoleFormatter() { }
-
-    public static void printHeader(String title) {
+    public static void printHeader(String t) {
         System.out.println("\n============================================================================");
-        System.out.println("  " + title);
+        System.out.println("  " + t);
         System.out.println("============================================================================");
     }
 
-    public static void printSubHeader(String subtitle) {
+    public static void printSubHeader(String t) {
         System.out.println("\n----------------------------------------------------------------------------");
-        System.out.println("  " + subtitle);
+        System.out.println("  " + t);
         System.out.println("----------------------------------------------------------------------------");
     }
 
@@ -30,48 +27,26 @@ public class ConsoleFormatter {
         System.out.println("----------------------------------------------------------------------------");
     }
 
-    public static void printBookTable(List<Book> books) {
-        if (books == null || books.isEmpty()) {
-            System.out.println("No matching books found.");
-            return;
-        }
-        System.out.printf("%-8s | %-26s | %-18s | %-15s | %-12s | %-9s%n",
-                "BOOK ID", "TITLE", "AUTHOR", "CATEGORY", "RFID TAG", "STATUS");
+    public static void printBookTable(List<Book> list) {
+        if (list == null || list.isEmpty()) { System.out.println("No books found."); return; }
+        System.out.printf("%-8s | %-26s | %-18s | %-15s | %-10s | %-9s%n", "BOOK ID", "TITLE", "AUTHOR", "CATEGORY", "SHELF", "STATUS");
         printDivider();
-        for (Book b : books) System.out.println(b);
-        System.out.println("Book Count: " + books.size());
+        list.forEach(System.out::println);
+        System.out.println("Total: " + list.size() + " books");
     }
 
-    public static void printIssueTable(List<IssueRecord> records) {
-        if (records == null || records.isEmpty()) {
-            System.out.println("No circulation records found.");
-            return;
-        }
-        System.out.printf("%-10s | %-10s | %-16s | %-8s | %-11s | %-11s | %-11s | %-8s | %-10s%n",
-                "TXN ID", "STUDENT ID", "STUDENT NAME", "BOOK ID", "ISSUE DATE", "DUE DATE", "RETURN DATE", "STATUS", "FINE");
+    public static void printIssueTable(List<IssueRecord> list) {
+        if (list == null || list.isEmpty()) { System.out.println("No records found."); return; }
+        System.out.printf("%-10s | %-8s | %-16s | %-8s | %-10s | %-10s | %-8s | %-8s%n",
+                "TXN ID", "STUDENT", "NAME", "BOOK ID", "ISSUE DATE", "DUE DATE", "STATUS", "FINE");
         printDivider();
-        for (IssueRecord r : records) System.out.println(r);
+        list.forEach(System.out::println);
     }
 
-    public static void printStudentTable(List<Student> students) {
-        if (students == null || students.isEmpty()) {
-            System.out.println("No students registered.");
-            return;
-        }
-        System.out.printf("%-10s | %-20s | %-22s | %-15s%n", "STUDENT ID", "STUDENT NAME", "EMAIL", "DEPARTMENT");
+    public static void printStudentTable(List<Student> list) {
+        if (list == null || list.isEmpty()) { System.out.println("No students found."); return; }
+        System.out.printf("%-10s | %-20s | %-20s%n", "ID", "NAME", "DEPARTMENT");
         printDivider();
-        for (Student s : students) System.out.println(s);
-        System.out.println("Total Registered Students: " + students.size());
-    }
-
-    public static void printReservationTable(List<Reservation> list) {
-        if (list == null || list.isEmpty()) {
-            System.out.println("No reservation requests.");
-            return;
-        }
-        System.out.printf("%-10s | %-10s | %-16s | %-8s | %-12s | %-10s%n",
-                "RES ID", "STUDENT ID", "STUDENT NAME", "BOOK ID", "DATE", "STATUS");
-        printDivider();
-        for (Reservation r : list) System.out.println(r);
+        list.forEach(s -> System.out.printf("%-10s | %-20s | %-20s%n", s.getId(), s.getName(), s.getDepartment()));
     }
 }

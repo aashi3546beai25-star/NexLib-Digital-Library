@@ -5,127 +5,44 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 /**
- * Tracks the lending transaction of a book to a registered student.
- * Demonstrates state management, date manipulation, and encapsulation.
+ * Lending circulation record tracking loan dates and fines.
  */
 public class IssueRecord implements Serializable {
     private static final long serialVersionUID = 1L;
+    private String txnId, studentId, studentName, bookId, bookTitle;
+    private LocalDate issueDate, dueDate, returnDate;
+    private double fine = 0.0;
 
-    private final String recordId;
-    private final String studentId;
-    private String studentName;
-    private final String bookId;
-    private String bookTitle;
-    private final LocalDate issueDate;
-    private final LocalDate dueDate;
-    private LocalDate returnDate;
-    private double fine;
-
-    /**
-     * Primary constructor with explicit student name and book details.
-     */
-    public IssueRecord(String recordId, String studentId, String studentName, String bookId,
-                       String bookTitle, LocalDate issueDate, LocalDate dueDate) {
-        this.recordId = recordId;
-        this.studentId = studentId;
-        this.studentName = (studentName != null && !studentName.trim().isEmpty()) ? studentName.trim() : "N/A";
-        this.bookId = bookId;
-        this.bookTitle = bookTitle != null ? bookTitle : "N/A";
-        this.issueDate = issueDate;
-        this.dueDate = dueDate;
-        this.returnDate = null;
-        this.fine = 0.0;
+    public IssueRecord(String txnId, String stuId, String stuName, String bookId, String title, LocalDate issue, LocalDate due) {
+        this.txnId = txnId; this.studentId = stuId; this.studentName = stuName;
+        this.bookId = bookId; this.bookTitle = title; this.issueDate = issue; this.dueDate = due;
     }
 
-    /**
-     * Overloaded constructor without studentName for backwards compatibility.
-     */
-    public IssueRecord(String recordId, String studentId, String bookId,
-                       String bookTitle, LocalDate issueDate, LocalDate dueDate) {
-        this(recordId, studentId, "N/A", bookId, bookTitle, issueDate, dueDate);
-    }
-
-    /**
-     * Backwards-compatible constructor for existing project signatures.
-     */
-    public IssueRecord(String studentId, String bookId, LocalDate issueDate, LocalDate dueDate) {
-        this("TXN-" + System.currentTimeMillis() % 100000, studentId, "N/A", bookId, "N/A", issueDate, dueDate);
-    }
-
-    public String getRecordId() {
-        return recordId;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public String getStudentName() {
-        return (studentName != null && !studentName.isEmpty()) ? studentName : "N/A";
-    }
-
-    public void setStudentName(String studentName) {
-        if (studentName != null && !studentName.trim().isEmpty()) {
-            this.studentName = studentName.trim();
-        }
-    }
-
-    public String getBookId() {
-        return bookId;
-    }
-
-    public String getBookTitle() {
-        return bookTitle;
-    }
-
-    public void setBookTitle(String bookTitle) {
-        this.bookTitle = bookTitle;
-    }
-
-    public LocalDate getIssueDate() {
-        return issueDate;
-    }
-
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-
-    public LocalDate getReturnDate() {
-        return returnDate;
-    }
-
-    public double getFine() {
-        return fine;
-    }
-
-    public boolean isReturned() {
-        return returnDate != null;
-    }
-
-    public boolean isOverdue() {
-        if (isReturned()) {
-            return returnDate.isAfter(dueDate);
-        }
-        return LocalDate.now().isAfter(dueDate);
-    }
+    public String getTxnId() { return txnId; }
+    public String getStudentId() { return studentId; }
+    public String getStudentName() { return studentName; }
+    public String getBookId() { return bookId; }
+    public String getBookTitle() { return bookTitle; }
+    public LocalDate getDueDate() { return dueDate; }
+    public LocalDate getReturnDate() { return returnDate; }
+    public double getFine() { return fine; }
+    public boolean isReturned() { return returnDate != null; }
+    public boolean isOverdue() { return !isReturned() && dueDate.isBefore(LocalDate.now()); }
 
     public long getDaysOverdue() {
-        LocalDate compareDate = isReturned() ? returnDate : LocalDate.now();
-        long days = ChronoUnit.DAYS.between(dueDate, compareDate);
-        return days > 0 ? days : 0;
+        LocalDate end = returnDate != null ? returnDate : LocalDate.now();
+        return Math.max(0, ChronoUnit.DAYS.between(dueDate, end));
     }
 
-    public void completeReturn(LocalDate date, double fineAmount) {
-        this.returnDate = date;
-        this.fine = fineAmount >= 0 ? fineAmount : 0.0;
+    public void completeReturn(LocalDate retDate, double fine) {
+        this.returnDate = retDate;
+        this.fine = fine;
     }
 
     @Override
     public String toString() {
-        String status = isReturned() ? "RETURNED" : (isOverdue() ? "OVERDUE" : "ACTIVE");
-        return String.format("%-10s | %-10s | %-16s | %-8s | %-11s | %-11s | %-11s | %-8s | Rs. %-6.2f",
-                recordId, studentId, getStudentName(), bookId, issueDate, dueDate,
-                (returnDate == null ? "Pending" : returnDate.toString()),
-                status, fine);
+        return String.format("%-10s | %-8s | %-16s | %-8s | %-10s | %-10s | %-8s | Rs.%.1f",
+                txnId, studentId, (studentName != null && studentName.length() > 14 ? studentName.substring(0, 13) + "." : studentName),
+                bookId, issueDate, dueDate, (isReturned() ? "RETURNED" : (isOverdue() ? "OVERDUE" : "ACTIVE")), fine);
     }
 }

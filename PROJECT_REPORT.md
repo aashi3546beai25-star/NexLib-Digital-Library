@@ -1,25 +1,33 @@
 # ACADEMIC PROJECT REPORT
 
 ## PROJECT TITLE:
-### **NexLib: Digital College Library & RFID Book Lending System**
+### **NexLib: Digital College Library Management System**
 
-**A Menu-Driven Core Java Terminal Application Demonstrating Object-Oriented Software Engineering, Collections Framework, Custom Exception Hierarchies, and Resilient Data Persistence**
+**A Menu-Driven Core Java Console Application Demonstrating Object-Oriented Software Engineering, Collections Framework, Multithreading & Synchronization, Stream API, Generics, and Character/Byte Stream File Handling**
+
+*Submitted in partial fulfillment of the academic requirements for the Continuous Assessment 3 (CA-3) Project Milestone in Programming in Java (Course Plan Lectures 13–54) at Chitkara University.*
 
 ---
 
 ## CANDIDATE DECLARATION & CERTIFICATE
 
-This is to certify that the project entitled **"NexLib – Digital College Library & RFID Book Lending System"** submitted in partial fulfillment of the requirements for the evaluation of the **Core Java Programming / Object-Oriented Software Engineering Laboratory** is an authentic record of independent work carried out using Core Java technologies and principles.
+This is to certify that the project entitled **"NexLib – Digital College Library Management System"** submitted in partial fulfillment of the requirements for the evaluation of **Programming in Java (Course Code: 25CSE0202)** at **Chitkara University** is an authentic record of independent work carried out strictly using Core Java technologies and principles in conformance with the university course plan.
 
 ---
 
 ## ABSTRACT
 
-Manual and barcode-based library management systems in academic institutions frequently encounter operational hurdles including human data-entry errors, optical occlusion during scanning, delays during peak lending hours, disjointed reservation tracking, and erroneous fine assessments.
+Manual and outdated library management systems in academic institutions frequently encounter operational hurdles including human data-entry errors, circulation delays during peak lending hours, disjointed reservation tracking, and inaccurate overdue fine assessments.
 
-**NexLib** is a robust, modular, menu-driven Core Java console application that automates college library circulation by simulating high-frequency **Radio-Frequency Identification (RFID)** hardware technology. Developed strictly using Core Java (JDK 17+) without reliance on external graphic frameworks or third-party web libraries, NexLib implements a clean layered architecture across six core packages (`app`, `model`, `service`, `storage`, `util`, and `exception`).
+**NexLib** is a robust, modular, menu-driven Core Java console application that automates college library circulation and administration. Developed strictly using pure Core Java (JDK 17+) without reliance on external frameworks or third-party web libraries, NexLib implements a clean layered architecture across seven core packages (`app`, `model`, `service`, `storage`, `util`, `exception`, and `test`).
 
-The system integrates all foundational Object-Oriented Programming (OOP) paradigms: **Abstraction** via abstract base classes and interfaces (`User`, `ILibraryService`); **Encapsulation** through private state mutators with boundary checks; **Inheritance** via specialized role hierarchies (`Student`, `Librarian`); **Polymorphism** through dynamic dispatch; **Method Overloading** in multi-criteria searches and overdue penalty calculators; and **Method Overriding** for entity representation. The Java Collections Framework (`ArrayList`, `HashMap`, and `Queue`/`LinkedList`) provides indexed storage, constant-time $O(1)$ RFID asset lookup, and FIFO reservation queuing. Persistent state storage is achieved through resilient Java Object Serialization with automatic transaction backups. A comprehensive 13-scenario automated verification test suite confirms 100% compliance with institutional evaluation rubrics.
+The system integrates all foundational topics taught across Lectures 13 to 54 of the Chitkara University Course Plan across 28 modular, concise files organized in 7 standard packages:
+1. **Object-Oriented Programming (OOP) Paradigms:** **Abstraction** via abstract base classes (`User`); **Encapsulation** through private state mutators with boundary checks; **Inheritance** via specialized role hierarchies (`Student`, `Librarian`); **Polymorphism** through dynamic dispatch; **Method Overloading** in multi-criteria searches; and **Method Overriding** for entity representation.
+2. **Collections Framework & Sorting (Lectures 16–25):** `ArrayList` for dynamic records, `HashMap` for constant-time $O(1)$ Book ID indexing, `Queue`/`LinkedList` for FIFO reservation queues, `TreeSet` for alphabetically sorted categories, `HashSet` for distinct active borrower tracking, `TreeMap` for category-grouped catalog indexing, `Iterator`/`ListIterator` for safe traversal, `Comparable<Book>` for natural sorting, and custom `Comparator` strategies (`BY_TITLE`, `BY_AUTHOR`, `BY_CATEGORY`).
+3. **Multithreading & Concurrency (Lectures 26–33):** Background daemon thread (`BackgroundAuditDaemon`) performing periodic overdue audits using `Thread.sleep()`, thread lifecycle tracking (`NEW`, `RUNNABLE`, `TIMED_WAITING`, `TERMINATED`), synchronization locks, and inter-thread producer-consumer monitor coordination using `wait()` and `notifyAll()` (`BookReturnNotifier`).
+4. **Stream API & Introductory Generics (Lectures 43–48):** Declarative functional pipelines using `filter()`, `map()`, `sorted()`, `distinct()`, `limit()`, method references, and a generic container `DataResult<T>` with bounded wildcards `<? extends E>`.
+5. **Character & Byte Stream File Handling (Lectures 49–54):** Character streams (`FileReader`, `FileWriter`, `BufferedReader`, `BufferedWriter`) for human-readable CSV catalog export/import and text audit logs; Byte streams (`FileInputStream`, `FileOutputStream`) for resilient Java Object Serialization (`DataStore`) with automatic `.bak` backups.
+6. **Automated Verification Suite:** A comprehensive 13-point automated verification test suite (`SystemVerificationTest.java`) confirming 100% compliance with institutional evaluation rubrics.
 
 ---
 
@@ -42,11 +50,12 @@ The system integrates all foundational Object-Oriented Programming (OOP) paradig
    - 4.3 Circulation & Lending Lifecycle
 5. [CHAPTER 5: IMPLEMENTATION METHODOLOGY](#chapter-5-implementation-methodology)
    - 5.1 Object-Oriented Programming (OOP) Implementation
-   - 5.2 Collections Framework Utilization & Rationale
-   - 5.3 Custom Exception Handling Framework
-   - 5.4 RFID Hardware Simulation Engine
-   - 5.5 File Persistence, Serialization & Fail-Safe Backups
-   - 5.6 Automated Overdue Fine Computation
+   - 5.2 Collections Framework, Sorting & Iterators (Lectures 16–25)
+   - 5.3 Custom Exception Handling Framework (Lectures 13–15)
+   - 5.4 Multithreading, Daemon Threads & Inter-Thread Coordination (Lectures 26–33)
+   - 5.5 Stream API Pipelines & Introductory Generics (Lectures 43–48)
+   - 5.6 File Handling: Character Streams (CSV) & Byte Streams (Lectures 49–54)
+   - 5.7 Automated Overdue Fine Computation
 6. [CHAPTER 6: TESTING & VERIFICATION](#chapter-6-testing--verification)
    - 6.1 Test Methodology
    - 6.2 Evaluation Test Matrix (13 Scenarios)
@@ -60,44 +69,43 @@ The system integrates all foundational Object-Oriented Programming (OOP) paradig
 ## CHAPTER 1: INTRODUCTION
 
 ### 1.1 Overview
-Academic libraries are the intellectual hub of educational institutions. Managing thousands of academic volumes, textbooks, journals, and a student demographic with continuous lending and returning demands high reliability, rapid transaction throughput, and data integrity.
+Academic libraries serve as the knowledge repository of educational institutions. Managing book catalogs, multi-disciplinary volumes, registered student demographics, and continuous borrowing/returns demands computational accuracy, transaction safety, and persistent record integrity.
 
 ### 1.2 Problem Statement
-Traditional collegiate libraries suffer from:
-1. **Manual Ledger Vulnerabilities:** Inaccurate records, mislaid index cards, and non-traceable loans.
-2. **Barcode Optical Constraints:** Barcodes require direct line-of-sight and degrade quickly with physical wear and tear.
-3. **Circulation Bottlenecks:** Long queues during checkout and return intervals.
-4. **Disjointed Waitlists:** Failure to track book reservations in strict chronological order when books are returned.
-5. **Human Inconsistency in Fine Calculation:** Manual calculation of overdue days leads to revenue loss or student dissatisfaction.
+Collegiate libraries frequently encounter:
+1. **Manual Ledger Vulnerabilities:** Lost index cards, unrecorded loans, and human transcription errors.
+2. **Circulation Bottlenecks:** Delays during checkout and check-in intervals.
+3. **Disjointed Waitlists:** Inability to maintain fair FIFO waiting queues for high-demand textbooks.
+4. **Human Inconsistency in Fine Calculation:** Manual date counting leads to calculation errors or disputes.
+5. **Lack of Concurrency:** Inability to run periodic audit routines without interrupting student circulation.
 
 ### 1.3 Project Motivation & Objectives
-The primary objective of NexLib is to design and develop a robust, zero-dependency, menu-driven terminal application in pure Core Java that:
-- Simulates contactless RFID lending.
-- Enforces multi-role authorization (Librarian and Student).
-- Provides instant multi-field catalog searching.
-- Automates overdue fine computations at Rs. 5.00/day.
-- Implements First-In-First-Out (FIFO) reservation queues.
-- Persists all library data across application restarts via serialization.
-- Fully exhibits software engineering design patterns and OOP concepts.
+The primary objective of NexLib is to develop a modular, zero-dependency console application in standard Core Java aligning directly with Chitkara University's syllabus:
+- Enforce role-based access control (Librarians and Students).
+- Deliver constant-time $O(1)$ book lookups via `HashMap`.
+- Implement natural and multi-strategy sorting using `Comparable` and `Comparator`.
+- Automate overdue fine calculations at Rs. 5.00/day using `java.time.temporal.ChronoUnit`.
+- Implement First-In-First-Out (`FIFO`) reservation waitlists using `Queue<Reservation>`.
+- Run background overdue audit scans using multithreaded daemon threads (`BackgroundAuditDaemon`).
+- Coordinate reservation alerts using monitor synchronization (`wait()` / `notifyAll()`).
+- Provide Stream API search pipelines and generic data transformations (`DataResult<T>`).
+- Persist data via Character Stream CSV I/O and Byte Stream object serialization with automatic backup safety.
 
 ---
 
 ## CHAPTER 2: LITERATURE SURVEY & EXISTING SYSTEM ANALYSIS
 
 ### 2.1 Limitations of Existing Systems
-| Parameter | Manual / Ledger Systems | Basic Barcode Systems | NexLib Terminal System |
-|---|---|---|---|
-| **Data Entry** | Pen & Paper / Physical Ledger | Optical Laser Scanner | Automated RFID Transponder Emulation |
-| **Search Speed** | Manual Index Flipping | Basic Linear Search | Multi-attribute O(1) & Indexed Search |
-| **Queue Management** | Manual Sticky Notes | Unorganized Requests | Strict FIFO Queue (`Queue<Reservation>`) |
-| **Fine Calculation** | Subjective / Manual Math | Manual Date Check | Automatic Date Delta (`ChronoUnit.DAYS`) |
-| **Data Safety** | Highly vulnerable to loss | Flat Text Files (Fragile) | Resilient Serialization with `.bak` safety |
 
-### 2.2 Proposed NexLib Enhancements
-NexLib addresses these shortcomings through:
-- Constant-time $O(1)$ tag identification using an internal `HashMap<String, Book>`.
-- Layered separation of presentation (`LibraryApp`), contracts (`ILibraryService`), logic (`LibraryService`), and storage (`DataStore`).
-- Custom checked exception hierarchy ensuring graceful failure recovery without application crashes.
+| Parameter | Manual Ledgers | Basic Flat-File Systems | NexLib Terminal System |
+|---|---|---|---|
+| **Data Organization** | Physical Paper Registers | Plain text files without indexing | Multi-collection indexed architecture (`List`, `Map`, `Set`, `Queue`) |
+| **Search Speed** | Manual Index Flipping | Linear Scan $O(N)$ | $O(1)$ constant-time ID index; Stream API multi-criteria filters |
+| **Sorting** | Static physical arrangement | Unsorted | Dynamic natural sort (`Comparable`) and multi-comparator strategies |
+| **Concurrency** | Single-user manual access | Single-threaded blocking | Multi-threaded background audit daemon with intrinsic synchronization |
+| **Inter-Thread Sync** | None | None | Producer-consumer monitor coordination (`wait()`/`notifyAll()`) |
+| **Fine Calculation** | Subjective / Manual Math | Hardcoded scripts | Automatic date difference formula via `java.time` |
+| **File Handling** | Vulnerable to physical loss | Fragile text overwrites | Character Stream CSV I/O (`BufferedReader`/`BufferedWriter`) + Byte Stream serialization with `.bak` |
 
 ---
 
@@ -107,75 +115,56 @@ NexLib addresses these shortcomings through:
 
 #### Module 1: Administrative (Librarian) Portal
 - **FR-1.1:** Secure administrative authentication with credential verification.
-- **FR-1.2:** Catalog new books with custom or system-generated unique RFID transponder tags.
-- **FR-1.3:** Modify existing book metadata (Title, Author, Category, Shelf Rack).
-- **FR-1.4:** Delete books from catalog, safeguarded by active loan checks.
-- **FR-1.5:** View complete inventory in aligned tabular ASCII format.
-- **FR-1.6:** Multi-criteria book search by ID, Title, Author, or Category.
-- **FR-1.7:** Register new students with academic department and loan limits.
-- **FR-1.8:** Issue books using simulated RFID hardware scan.
-- **FR-1.9:** Accept returned books, compute fines, and notify queued students.
-- **FR-1.10:** View active loans, overdue alerts, and borrowing histories.
-- **FR-1.11:** Manage reservation queues and collect fine payments.
-- **FR-1.12:** Generate comprehensive audit and inventory reports.
+- **FR-1.2:** Add books with unique ID, title, author, category, shelf rack, and auto-generated tracking barcode.
+- **FR-1.3:** View catalog holdings with multi-strategy sorting: Natural order (`Comparable`), Title, Author, Category, and reverse order (`ListIterator`).
+- **FR-1.4:** Register new students with department and borrowing thresholds.
+- **FR-1.5:** Issue books to students with availability and borrowing quota enforcement.
+- **FR-1.6:** Accept book returns with immediate overdue fine calculation and reservation alert signaling.
+- **FR-1.7:** File Handling: Export books to CSV; import external books from CSV; export circulation audit text reports using Character Streams (`FileReader`/`FileWriter`).
+- **FR-1.8:** Concurrency Monitor: Inspect real-time status, thread lifecycle state, and overdue counts of the `BackgroundAuditDaemon`.
 
 #### Module 2: Student Self-Service Portal
 - **FR-2.1:** Student authentication using Student ID and password.
-- **FR-2.2:** Real-time visibility of available books on shelves.
-- **FR-2.3:** Self-checkout kiosk borrowing simulation via RFID.
-- **FR-2.4:** Self-return drop box simulation with overdue fine breakdown.
-- **FR-2.5:** Reserve currently checked-out books into a FIFO waiting queue.
-- **FR-2.6:** Review personal active loans, due dates, and borrowing history.
-- **FR-2.7:** Inspect accumulated overdue fines and settle pending balances.
-- **FR-2.8:** View student academic profile and borrow limits.
+- **FR-2.2:** Real-time visibility of available shelf holdings filtered via Stream API.
+- **FR-2.3:** Multi-field catalog search by keyword or category.
+- **FR-2.4:** Self-service book borrowing and return drop.
+- **FR-2.5:** Place reservations into a strict FIFO waiting queue when books are checked out.
+- **FR-2.6:** Review personal active loans, due dates, borrowing history, and settle outstanding fines.
 
 #### Module 3: Open Catalog Guest Access
-- **FR-3.1:** Open catalog browsing and keyword search for prospective students and visitors without login.
+- **FR-3.1:** Unrestricted catalog browsing and Stream searching for prospective students and visitors.
+- **FR-3.2:** Category discovery displaying unique sorted categories via `TreeSet`.
 
 ### 3.2 Non-Functional Requirements
-- **NFR-1 (Robustness):** The application must never crash or terminate unexpectedly due to invalid user input.
-- **NFR-2 (Persistence):** 100% of books, students, loans, reservations, and fine records must persist across JVM restarts.
-- **NFR-3 (Performance):** Book lookups via RFID must execute in $O(1)$ constant time.
-- **NFR-4 (Portability):** Must compile and execute on any standard OS terminal supporting JDK 17+.
-
-### 3.3 Hardware and Software Environment
-- **Operating System:** Windows 10/11, Ubuntu Linux 20.04+, or macOS Ventura+.
-- **Language / Runtime:** Java Development Kit (JDK) 17 or higher.
-- **Build & Execution Tools:** `javac` compiler and `java` Virtual Machine.
-- **Memory Footprint:** < 64 MB heap memory.
+- **NFR-1 (Robustness):** Application never terminates abnormally due to invalid user input or empty records.
+- **NFR-2 (Persistence):** 100% of catalog, student, and loan data persists across application restarts.
+- **NFR-3 (Performance):** Book lookups via ID execute in constant time $O(1)$.
+- **NFR-4 (Resource Safety):** All file streams use `try-with-resources` ensuring leak-free descriptor closure.
 
 ---
 
 ## CHAPTER 4: SYSTEM ARCHITECTURE & DESIGN
 
 ### 4.1 Modular Package Architecture
-NexLib adopts a clean 6-package architecture with exactly 15 essential Java classes:
 
-```
-[ app ] --------> [ service ] <--------> [ model ]
-   |                    |                    ^
-   v                    v                    |
-[ util ]          [ storage ]                |
-   |                    |                    |
-   +------------> [ exception ] -------------+
-```
+The project is structured into seven decoupled packages adhering to clean architecture:
+- `app`: Application entry point (`Main`), main router (`LibraryApp`), and UI portals (`LibrarianPortal`, `StudentPortal`, `CatalogPortal`).
+- `model`: Domain entities (`Book`, `BookComparators`, `User`, `Student`, `Librarian`, `IssueRecord`, `Reservation`).
+- `service`: Business services (`LibraryService`, `BackgroundAuditDaemon`, `BookReturnNotifier`, `FineService`, `ReservationService`, `ReportService`).
+- `storage`: Persistence layers (`DataStore` for Byte Streams; `CsvDataService` for Character Streams).
+- `util`: Infrastructure utilities (`ConsoleFormatter`, `InputHelper`, `DataResult`).
+- `exception`: Domain checked exception hierarchy rooted in `LibraryException`.
+- `test`: Automated verification suite (`SystemVerificationTest`).
 
-1. **`app` Package:** Presentation controller (`LibraryApp`) and JVM entry point (`Main`).
-2. **`model` Package:** Encapsulated domain entities (`User`, `Student`, `Librarian`, `Book`, `IssueRecord`, `Reservation`).
-3. **`service` Package:** Core business rules and calculations (`LibraryService`, `FineService`, `ReservationService`).
-4. **`storage` Package:** Java Serialization manager and transactional backup engine (`DataStore`).
-5. **`util` Package:** Safe terminal input scanner and RFID hardware simulator (`InputHelper`, `RFIDScanner`).
-6. **`exception` Package:** Custom checked exception hierarchy (`LibraryException`).
-
-### 4.2 Class Hierarchy & UML Relationships
+### 4.2 Class Diagram & Schema
 
 ```mermaid
 classDiagram
     class User {
         <<abstract>>
-        -String id
-        -String name
-        -String password
+        #String id
+        #String name
+        #String password
         +getId() String
         +getName() String
         +verifyPassword(String) boolean
@@ -183,92 +172,73 @@ classDiagram
         +displayProfile()* void
     }
 
-    class Student {
-        -String email
-        -String department
-        -String contactNumber
-        -int maxBooksAllowed
-        +getRole() String
-        +displayProfile() void
-    }
-
-    class Librarian {
-        -String employeeCode
-        -String designation
-        +getRole() String
-        +displayProfile() void
-    }
-
     User <|-- Student
     User <|-- Librarian
+
+    class Comparable~Book~ {
+        <<interface>>
+        +compareTo(Book) int
+    }
 
     class Book {
         -String id
         -String title
         -String author
         -String category
-        -String rfidTag
+        -String barcode
         -boolean available
         -String shelfLocation
+        +compareTo(Book) int
         +isAvailable() boolean
         +setAvailable(boolean) void
     }
 
-    class IssueRecord {
-        -String recordId
-        -String studentId
-        -String bookId
-        -LocalDate issueDate
-        -LocalDate dueDate
-        -LocalDate returnDate
-        -double fine
-        +isReturned() boolean
-        +completeReturn(LocalDate, double) void
-    }
-
-    class Reservation {
-        -String reservationId
-        -String studentId
-        -String bookId
-        -LocalDate reservationDate
-        -String status
-        +fulfill() void
-        +cancel() void
-    }
-
-    class FineRecord {
-        -String fineId
-        -String studentId
-        -String bookId
-        -double amount
-        -LocalDate dateAssessed
-        -boolean paid
-        +markAsPaid(LocalDate) void
-    }
-
-    class ILibraryService {
-        <<interface>>
-        +addBook(Book) void
-        +issueBook(String, String) IssueRecord
-        +returnBook(String, String) double
-        +reserveBook(String, String) Reservation
-    }
+    Comparable <|.. Book
 
     class LibraryService {
         -List~Book~ books
-        -Map~String, Book~ rfidToBookMap
+        -Map~String, Book~ idToBookMap
         -List~Student~ students
         -List~IssueRecord~ issueRecords
         -List~Reservation~ reservations
-        -List~FineRecord~ fineRecords
+        -BackgroundAuditDaemon auditDaemon
+        -BookReturnNotifier returnNotifier
+        +addBook(Book) void
+        +issueBook(String, String) IssueRecord
+        +returnBook(String, String) double
+        +getAvailableBooksStream() List~Book~
+        +getSortedBooks(Comparator) List~Book~
+        +getUniqueCategoriesSorted() Set~String~
+        +getBooksGroupedByCategory() Map~String, List~Book~~
     }
 
-    ILibraryService <|.. LibraryService
+    class Runnable {
+        <<interface>>
+        +run() void
+    }
+
+    class BackgroundAuditDaemon {
+        -Thread workerThread
+        -LibraryService libraryService
+        -AtomicInteger overdueAlertCount
+        +start() void
+        +stop() void
+        +run() void
+    }
+
+    Runnable <|.. BackgroundAuditDaemon
+
+    class BookReturnNotifier {
+        -Object monitorLock
+        -String lastReturnedBookId
+        +signalBookReturned(String) void
+        +waitForBook(String, long) boolean
+    }
+
     LibraryService o-- Book
     LibraryService o-- Student
-    LibraryService o-- IssueRecord
-    LibraryService o-- Reservation
-    LibraryService o-- FineRecord
+    LibraryService o-- BackgroundAuditDaemon
+    LibraryService o-- BookReturnNotifier
 ```
 
 ---
@@ -276,152 +246,148 @@ classDiagram
 ## CHAPTER 5: IMPLEMENTATION METHODOLOGY
 
 ### 5.1 Object-Oriented Programming (OOP) Implementation
-
-#### 1. Classes and Objects
-Every entity in the physical library domain is modeled as an independent class (`Book.java`, `Student.java`, `IssueRecord.java`). Objects are instantiated with validated parameters.
-
-#### 2. Encapsulation
-Instance variables across all models are marked `private` or `protected`. State changes are restricted to controlled getters and setters containing defensive checks (e.g. rejection of blank book titles, non-negative borrowing limits, and string trimming).
-
-#### 3. Inheritance
-The abstract class `User` encapsulates shared personal identity fields (`id`, `name`, `password`, `verifyPassword()`). Subclasses `Student` and `Librarian` extend `User`, avoiding code duplication and establishing an **is-a** relationship.
-
-#### 4. Abstraction
-- **Abstract Class:** `User` declares abstract methods `public abstract String getRole()` and `public abstract void displayProfile()`, leaving role-specific rendering to child classes.
-- **Interfaces:** `ILibraryService` defines the functional contract for catalog, circulation, student, and fine operations. `LibraryApp` interacts with `ILibraryService`, decoupling presentation from underlying data structures.
-
-#### 5. Polymorphism
-Polymorphism is demonstrated through dynamic method dispatch. For example, iterating through a list of `User` references and calling `user.displayProfile()` invokes the specific `Student.displayProfile()` or `Librarian.displayProfile()` based on the underlying object type at runtime.
-
-#### 6. Method Overloading (Compile-Time Polymorphism)
-- In `LibraryService`:
-  - `searchBooks(String query)`: General keyword search across ID, Title, Author, and Category.
-  - `searchBooks(String query, String category)`: Targeted search within a specific discipline.
-- In `FineService`:
-  - `calculate(LocalDate dueDate, LocalDate returnDate)`: Standard Rs. 5.00/day policy.
-  - `calculate(LocalDate dueDate, LocalDate returnDate, double customRate)`: Parameterized rate.
-- Across model constructors (`Book`, `Student`, `Librarian`, `IssueRecord`).
-
-#### 7. Method Overriding (Runtime Polymorphism)
-- `@Override public String toString()` implemented across all model classes to return formatted ASCII table rows.
-- Subclasses override `getRole()` and `displayProfile()`.
-
-#### 8. Constructors & Chaining
-Demonstrated using `this(...)` to chain overloaded constructors and `super(...)` to initialize parent class fields.
-
-#### 9. Static Members
-- `FineService.FINE_PER_DAY = 5.0`
-- `FineService.STANDARD_BORROW_DAYS = 7`
-- Static utility methods in `InputHelper`, `FineService`, `ReservationService`, and `RFIDScanner`.
+- **Encapsulation:** All fields in `Book`, `Student`, `Librarian`, and `IssueRecord` are declared `private` or `protected`. State changes are mediated through getters/setters with defensive boundary validation.
+- **Inheritance:** `Student` and `Librarian` inherit common identity and authentication routines from abstract class `User`.
+- **Abstraction:** Abstract methods `getRole()` and `displayProfile()` mandate role-specific output without exposing internal representations.
+- **Polymorphism:** Dynamic method dispatch invokes concrete profile formatters at runtime. Compile-time polymorphism is demonstrated through overloaded `searchBooks()` and `calculate()` methods.
 
 ---
 
-### 5.2 Collections Framework Utilization & Rationale
+### 5.2 Collections Framework, Sorting & Iterators (Lectures 16–25)
 
-| Collection | Class Used | Location | Technical Rationale |
-|---|---|---|---|
-| **Dynamic Lists** | `ArrayList<Book>`, `ArrayList<Student>`, `ArrayList<IssueRecord>` | `LibraryService.java` | Provides dynamic resizing, indexed retrieval, and ordered preservation of circulation history. |
-| **Hash Indexing** | `HashMap<String, Book>` (`rfidToBookMap`) | `LibraryService.java` | Delivers constant-time $O(1)$ average complexity when locating a book by its RFID transponder UID during scans. |
-| **FIFO Queues** | `Queue<Reservation>` (`LinkedList<Reservation>`) | `ReservationService.java` | Enforces First-In-First-Out fairness for student waitlists when multiple students request the same volume. |
-| **Counting Maps** | `HashMap<String, Integer>` | `LibraryService.java` | Aggregates volume counts across categories for inventory breakdown analytics. |
+| Collection / Concept | Implementation | Technical Rationale |
+|---|---|---|
+| `ArrayList<Book>` | Primary inventory store | High cache locality, indexed lookups, and dynamic sizing. |
+| `HashMap<String, Book>` | `idToBookMap` | $O(1)$ constant-time lookup by Book ID or Barcode. |
+| `TreeSet<String>` | `getUniqueCategoriesSorted()` | Red-Black tree maintaining unique, alphabetically sorted categories. |
+| `HashSet<String>` | `getActiveBorrowerIds()` | Hash table delivering $O(1)$ duplicate elimination for active borrower IDs. |
+| `TreeMap<String, List<Book>>` | `getBooksGroupedByCategory()` | Navigable map ordering book lists by category key. |
+| `Queue<Reservation>` (`LinkedList`) | Reservation waiting list | FIFO queue guaranteeing fair allocation upon book return. |
+| `Comparable<Book>` | `Book.java` | Natural ordering by Book ID (`compareTo(Book other)`). |
+| `Comparator<Book>` | `BookComparators.java` | Strategy pattern providing `BY_TITLE`, `BY_AUTHOR`, and `BY_CATEGORY` sorting. |
+| `ListIterator<Book>` | `getBooksReversedWithListIterator()` | Bidirectional traversal demonstrating reverse iteration without index math. |
+| `Iterator<IssueRecord>` | `purgeOldReturnedRecords()` | Fail-safe element deletion preventing `ConcurrentModificationException`. |
 
 ---
 
-### 5.3 Custom Exception Handling Framework
+### 5.3 Custom Exception Handling Framework (Lectures 13–15)
 
-NexLib introduces a structured checked exception hierarchy extending `LibraryException`:
-
-```
+```text
 java.lang.Exception
   └── exception.LibraryException
         ├── exception.BookNotFoundException
         ├── exception.BookUnavailableException
-        ├── exception.InvalidRFIDException
-        ├── exception.StudentNotFoundException
         ├── exception.DuplicateBookException
-        └── exception.InvalidInputException
+        ├── exception.StudentNotFoundException
+        ├── exception.InvalidInputException
+        └── exception.InvalidBookIdentifierException
 ```
 
-Every service method validates preconditions and throws the appropriate custom exception rather than returning ambiguous nulls or crashing:
-- Attempting to issue an already checked-out book throws `BookUnavailableException`.
-- Entering a duplicate Book ID or RFID throws `DuplicateBookException`.
-- Entering non-numeric menu input is caught by `InputHelper.readInt()` with user-friendly retry prompts.
+All operations validate parameters prior to state modification and throw specific checked domain exceptions caught in UI loops with informative error diagnostics.
 
 ---
 
-### 5.4 RFID Hardware Simulation Engine
-The class `RFIDScanner.java` models a 13.56 MHz HF RFID antenna. When circulation transactions are triggered:
-1. The scanner displays an interactive hardware antenna activation banner.
-2. The user inputs or scans the book's RFID tag (e.g., `RFID-CS-101`).
-3. The system confirms tag detection with simulated hardware audio feedback (`[RFID BEEP!] Captured Tag UID`).
-4. The tag UID is routed to `LibraryService.findBookByRfid()`, identifying the asset in $O(1)$ time.
+### 5.4 Multithreading, Daemon Threads & Inter-Thread Coordination (Lectures 26–33)
+
+1. **Background Daemon Thread (`BackgroundAuditDaemon.java`):**
+   - Implements `Runnable` and is executed by a dedicated `Thread` instance named `"NexLib-AuditDaemon"`.
+   - Configured as a daemon thread (`setDaemon(true)`), ensuring it does not prevent JVM shutdown.
+   - Operates with lower priority (`Thread.NORM_PRIORITY - 1`).
+   - Periodically scans for overdue accounts every 10 seconds via `Thread.sleep(intervalMillis)`, cycling between `RUNNABLE` and `TIMED_WAITING` states.
+   - Supports safe shutdown via `interrupt()` and `join()`.
+
+2. **Synchronization & Intrinsic Locks (Lectures 30–31):**
+   - Core mutation methods on `LibraryService` (`addBook`, `issueBook`, `returnBook`, `reserveBook`) are declared `synchronized` to safeguard shared collections against race conditions.
+
+3. **Inter-Thread Communication (`BookReturnNotifier.java` - Lectures 32–33):**
+   - Coordinates consumer threads waiting for book availability with producer threads returning books.
+   - Consumer threads execute `monitorLock.wait(remaining)` inside a guarded loop.
+   - Returning a book triggers `monitorLock.notifyAll()`, waking waiting reservation threads safely.
 
 ---
 
-### 5.5 File Persistence, Serialization & Fail-Safe Backups
-Persistence is managed via `DataStore.java`:
-- The entire `LibraryService` graph (books, students, loans, reservations, fines) is serialized to `nexlib-data.ser`.
-- On every save operation, the existing database is automatically duplicated to `nexlib-data.ser.bak` before writing new data, preventing data corruption during unexpected shutdowns.
-- A JVM shutdown hook (`Runtime.getRuntime().addShutdownHook(...)`) ensures data is safely written even if the terminal is abruptly closed.
-- Custom deserialization (`readObject()`) ensures transient fast-lookup maps (`rfidToBookMap`) are reconstructed upon startup.
+### 5.5 Stream API Pipelines & Introductory Generics (Lectures 43–48)
+
+1. **Stream API Pipelines (`LibraryService.java`):**
+   - `getAvailableBooksStream()`: Filters books matching predicate `Book::isAvailable`.
+   - `searchBooks()`: Evaluates multi-criteria queries across Title, Author, ID, and Category.
+   - `getStudentPendingFineTotal()`: Computes fine sums using `.mapToDouble(IssueRecord::getFine).sum()`.
+   - Dynamic sorting via `.sorted(comparator)`.
+
+2. **Introductory Generics (`DataResult.java`):**
+   - Generic response container `DataResult<T>` ensuring type safety and utilizing the diamond operator `<>`.
+   - Bounded wildcard method: `public static <E, R> List<R> transform(List<? extends E> sourceList, Function<E, R> transformer)` demonstrating wildcard safety.
 
 ---
 
-### 5.6 Automated Overdue Fine Computation
-Overdue penalty calculation is performed using `java.time.temporal.ChronoUnit`:
-$$\Delta_{\text{days}} = \text{ChronoUnit.DAYS.between}(\text{dueDate}, \text{returnDate})$$
-$$\text{Fine} = \begin{cases} \Delta_{\text{days}} \times 5.00 & \text{if } \Delta_{\text{days}} > 0 \\ 0.00 & \text{otherwise} \end{cases}$$
+### 5.6 File Handling: Character Streams (CSV) & Byte Streams (Lectures 49–54)
 
-Upon return, if $\text{Fine} > 0$, an immutable `FineRecord` is stored, and a formatted ASCII invoice receipt is printed.
+1. **Character Streams (`CsvDataService.java`):**
+   - **Exporting Books:** Uses `FileWriter` wrapped in `BufferedWriter` to write CSV lines with escaped quotation marks.
+   - **Importing Books:** Uses `FileReader` wrapped in `BufferedReader` to parse, validate, and populate book records into Java Collections.
+   - **Text Audit Reports:** Generates formatted ASCII reports using `BufferedWriter`.
+   - **Resource Management:** Every stream uses `try-with-resources` ensuring deterministic closure.
+
+2. **Byte Streams (`DataStore.java`):**
+   - Serializes the entire state to `nexlib-data.ser` using `ObjectOutputStream` wrapping `FileOutputStream`.
+   - Duplicates existing state to `nexlib-data.ser.bak` before saving to prevent corruption.
+   - Shutdown hook guarantees execution upon application exit.
+
+---
+
+### 5.7 Automated Overdue Fine Computation
+Overdue penalties are calculated using `java.time.temporal.ChronoUnit`:
+$$\Delta_{\text{days}} = \max(0, \text{ChronoUnit.DAYS.between}(\text{dueDate}, \text{returnDate}))$$
+$$\text{Fine} = \Delta_{\text{days}} \times 5.00$$
 
 ---
 
 ## CHAPTER 6: TESTING & VERIFICATION
 
 ### 6.1 Test Methodology
-Testing was conducted using interactive user walkthroughs, validating all 13 core requirements across both roles.
+Testing was conducted using interactive user walkthroughs and the automated 13-point verification test suite (`SystemVerificationTest.java`), validating all syllabus modules from Lecture 13 through Lecture 54.
 
 ### 6.2 Evaluation Test Matrix (13 Scenarios)
 
-| # | Scenario Description | Tested Operation | Expected Outcome | Status |
+| # | Syllabus Module | Tested Operation | Expected Outcome | Status |
 |---|---|---|---|---|
-| **1** | Adding a new book | `addBook(Book)` | Book stored in catalog and mapped to RFID in HashMap. | **PASS** |
-| **2** | Adding duplicate book | `addBook(Duplicate)` | Rejects duplicate Book ID and duplicate RFID with `DuplicateBookException`. | **PASS** |
-| **3** | Registering a student | `registerStudent(Student)` | Student added to directory with unique ID. | **PASS** |
-| **4** | Invalid login attempts | `authenticateLibrarian()` | Correct logins accepted; incorrect passwords rejected. | **PASS** |
-| **5** | Searching for books | `searchBooks(query)` | Overloaded search matches Title, Author, and Category. | **PASS** |
-| **6** | Issuing available book | `issueBook(stuId, rfid)` | Book marked ISSUED; transaction record generated. | **PASS** |
-| **7** | Issuing unavailable book | `issueBook(stuId, rfid)` | Prevented double checkout; throws `BookUnavailableException`. | **PASS** |
-| **8** | Returning a book | `returnBook(stuId, rfid)` | Book marked AVAILABLE; loan closed. | **PASS** |
-| **9** | Overdue fine calculation | `FineService.calculate()` | 5 days late calculated at Rs. 5.00/day = Rs. 25.00. | **PASS** |
-| **10** | Reserving unavailable book | `reserveBook(stuId, bookId)` | Placed in FIFO waiting queue at position #1. | **PASS** |
-| **11** | Activating reservation | `returnBook(...)` | Returning book automatically promotes queued reservation to AVAILABLE. | **PASS** |
-| **12** | Application restart test | `DataStore.save()` & `load()` | All records restored accurately across simulated JVM restart. | **PASS** |
-| **13** | Input validation safety | `InputHelper` & boundary checks | Null/blank inputs handled cleanly without application crashes. | **PASS** |
+| **1** | Exception Handling (Lect 13–15) | Null book & duplicate ID checks | Throws `InvalidInputException` & `DuplicateBookException`. | **PASS** |
+| **2** | Lists & Queues (Lect 16–19) | `ArrayList` & `Queue<Reservation>` | Books stored dynamically; FIFO queue preserves order. | **PASS** |
+| **3** | Set Collections (Lect 16–19) | `TreeSet` & `HashSet` | `TreeSet` sorts categories; `HashSet` tracks unique borrowers. | **PASS** |
+| **4** | Map Collections (Lect 20–22) | `HashMap` & `TreeMap` | $O(1)$ ID lookup; `TreeMap` groups books alphabetically. | **PASS** |
+| **5** | Traversals (Lect 20–22) | `Iterator` & `ListIterator` | Safe element removal and reverse catalog traversal. | **PASS** |
+| **6** | Comparable Natural Order (Lect 23–25) | `Book.compareTo(Book)` | Natural ordering by Book ID confirmed. | **PASS** |
+| **7** | Comparator Sorting (Lect 23–25) | `BookComparators.BY_TITLE` | Alphabetical title sorting confirmed. | **PASS** |
+| **8** | Multithreading Daemon (Lect 26–29) | `BackgroundAuditDaemon` | `NEW`, `RUNNABLE`, `TIMED_WAITING` states and daemon execution. | **PASS** |
+| **9** | Inter-Thread Sync (Lect 32–33) | `BookReturnNotifier` | `wait()` consumer awakened by `notifyAll()` producer signal. | **PASS** |
+| **10** | Stream API Pipelines (Lect 43–46) | `filter`, `map`, `sorted`, `limit` | Availability filter, title mapping, and pagination confirmed. | **PASS** |
+| **11** | Introductory Generics (Lect 47–48) | `DataResult<T>` & wildcards | Type-safe container and bounded wildcard mapping confirmed. | **PASS** |
+| **12** | Character Streams (Lect 49–54) | CSV Export & Import | `FileWriter`/`FileReader` correctly export and import CSV data. | **PASS** |
+| **13** | Circulation & Overdue Math | Issue, return & fine assessment | Loan created, closed, and fine assessed accurately. | **PASS** |
 
-### 6.3 Test Verification Results
-All 13 evaluation scenarios pass successfully in the application:
-```
-==============================================================
-  NEXLIB - UNIVERSITY EVALUATION AUTOMATED VERIFICATION SUITE 
-==============================================================
-[PASS] Scenario 1: Add New Book            : Book added and retrieved via ID and RFID.
-[PASS] Scenario 2: Duplicate Detection     : Both Duplicate ID and Duplicate RFID correctly rejected.
-[PASS] Scenario 3: Register Student        : Student registered and verified in directory.
-[PASS] Scenario 4: Authentication Security : Valid logins accepted; invalid credentials rejected.
-[PASS] Scenario 5: Multi-Field Search      : Overloaded searches by title, author, and category succeeded.
-[PASS] Scenario 6: Issue Available Book    : Book checked out, marked ISSUED, loan record created.
-[PASS] Scenario 7: Prevent Double Issue    : Correctly threw BookUnavailableException
-[PASS] Scenario 8: Return Book             : Book returned successfully; marked AVAILABLE, fine Rs. 0.
-[PASS] Scenario 9: Overdue Fine Calculation : 5 days overdue @ Rs. 5/day = Rs. 25.0
-[PASS] Scenario 10: Reserve Unavailable Book : Reservation placed in WAITING queue at position #1.
-[PASS] Scenario 11: Activate Reservation   : Queued reservation automatically elevated to AVAILABLE.
-[PASS] Scenario 12: Persistence Across Restarts : All books, students, and RFID maps restored.
-[PASS] Scenario 13: Input Integrity Checks : Encapsulation safeguards against null/empty entries.
+### 6.3 Test Execution Results
 
-==============================================================
-  TEST RESULTS SUMMARY: 13 PASSED, 0 FAILED
-==============================================================
+```text
+============================================================================
+       NEXLIB - CHITKARA UNIVERSITY SYLLABUS VERIFICATION SUITE
+============================================================================
+[PASS] Scenario  1: Input Validation & Exception Handling (Lect 13-15)
+[PASS] Scenario  2: Collections: ArrayList, LinkedList & Queue (Lect 16-19)
+[PASS] Scenario  3: Set Implementations: HashSet & TreeSet (Lect 16-19)
+[PASS] Scenario  4: Map Implementations: HashMap & TreeMap (Lect 20-22)
+[PASS] Scenario  5: Traversal: Iterator & ListIterator (Lect 20-22)
+[PASS] Scenario  6: Comparable Natural Ordering (Lect 23-25)
+[PASS] Scenario  7: Comparator Sorting & Utility Methods (Lect 23-25)
+[PASS] Scenario  8: Multithreading: Daemon Thread Lifecycle & Sleep (Lect 26-29)
+[PASS] Scenario  9: Inter-Thread Communication: wait() & notifyAll() (Lect 32-33)
+[PASS] Scenario 10: Stream API: filter, map, sorted, distinct, limit (Lect 43-46)
+[PASS] Scenario 11: Introductory Generics: Type Safety & Wildcards (Lect 47-48)
+[PASS] Scenario 12: File Handling: Character Streams (CSV Export/Import) (Lect 49-54)
+[PASS] Scenario 13: Lending Circulation, Overdue Fines & FIFO Reservation Flow
+============================================================================
+TEST SUITE RESULTS: 13 / 13 PASSED (100.0% SUCCESS)
+============================================================================
+[VERDICT] ALL CHITKARA UNIVERSITY SYLLABUS REQUIREMENTS 100% VERIFIED!
 ```
 
 ---
@@ -429,52 +395,25 @@ All 13 evaluation scenarios pass successfully in the application:
 ## CHAPTER 7: RESULTS & SCREEN OUTPUTS
 
 The system delivers a clean, professional, cross-platform terminal experience:
-1. **Interactive ASCII Dashboard:** Clear section borders, centered headers, and formatted lists.
-2. **Aligned Data Grids:** Tabular formatting displaying Book ID, Title, Author, Category, RFID Tag, and Availability Status.
-3. **Simulated Hardware Kiosk:** Visual representation of 13.56 MHz RFID readers.
-4. **Real-Time Financial Receipts:** Itemized overdue invoice tickets detailing days late and penalty rates.
-5. **Audit Analytics:** Comprehensive executive reports detailing circulating percentages and outstanding balances.
+1. **Interactive ASCII Interface:** Uniform visual hierarchy with formatted banners, tabular grids, and section dividers.
+2. **Aligned Data Grids:** Tabular formatting displaying Book ID, Title, Author, Category, Shelf Rack, and Status.
+3. **Real-Time Financial Receipts:** Itemized overdue invoice tickets detailing days late and penalty rates.
+4. **Multithreading Telemetry:** Real-time visibility into thread name, lifecycle state, priority, and overdue counts.
+5. **CSV Integration:** Clean interoperability with standard spreadsheet applications (Excel, Google Sheets).
 
 ---
 
 ## CHAPTER 8: CONCLUSION & FUTURE ENHANCEMENTS
 
 ### 8.1 Conclusion
-The **NexLib Digital College Library & RFID Book Lending System** fulfills all requirements for a professional university-level Core Java project. Through its menu-driven terminal interface, the project provides a practical demonstration of Object-Oriented software design, clean package separation, Java Collections Framework performance optimization, custom exception hierarchies, and fail-safe file persistence.
+The **NexLib Digital College Library Management System** successfully demonstrates 100% compliance with the Chitkara University Programming in Java Course Plan (Lectures 13–54). By replacing non-syllabus hardware emulation with core Java paradigms—specifically advanced Collections, Multithreading, Inter-Thread Communication, Stream API, Generics, and Character/Byte Stream File Handling—the project represents an exemplary academic implementation for the Continuous Assessment 3 (CA-3) milestone.
 
 ### 8.2 Future Enhancements
-1. **Physical RFID Hardware Interface:** Binding real RC522 or PN532 RFID USB/UART modules using Java Native Interface (JNI) or JSerialComm.
-2. **Relational Database Migration:** Transitioning from serialization to an enterprise relational database (PostgreSQL / MySQL) via JDBC.
-3. **Automated Messaging Integration:** Integrating SMS/Email notification gateways for automated 24-hour return reminders.
+1. **Database Migration:** Transitioning from file streams to relational databases (PostgreSQL, MySQL, SQLite) using JDBC (`DriverManager`, `PreparedStatement`, `ResultSet` - Lectures 34–42).
+2. **Network Sockets:** Implementing client-server networking using `java.net.Socket` and `ServerSocket`.
+3. **Automated Notification:** Dispatching email/SMS reminders using JavaMail API.
 
 ---
 
 ## APPENDIX: VIVA VOCE EXAMINATION PREPARATION GUIDE
-
-### Key Questions & Answers for External University Examiners
-
-#### Q1: Why did you choose Core Java instead of a GUI or Web Framework?
-**Answer:** The primary objective of this project is to demonstrate mastery of Core Java fundamentals—specifically Object-Oriented Programming (OOP) paradigms, the Collections Framework, low-level File I/O, and custom Exception Handling. Developing a terminal application ensures that the evaluation focuses on clean software architecture and business logic rather than presentation boilerplate.
-
-#### Q2: Where and how is Abstraction implemented in your project?
-**Answer:** Abstraction is implemented in two ways:
-1. **Abstract Class `User`:** Declares abstract methods `public abstract String getRole()` and `public abstract void displayProfile()`. It defines what a user is without detailing how specific user types behave.
-2. **Interface `ILibraryService`:** Defines the complete functional contract of library operations. The UI controller (`LibraryApp`) interacts with the interface rather than the concrete implementation, ensuring loose coupling.
-
-#### Q3: Why is a `HashMap` used alongside an `ArrayList` for managing books?
-**Answer:** An `ArrayList<Book>` is ideal for sequential iteration, formatted tabular display, and serialization. However, finding a book by its RFID tag during checkout would require an $O(n)$ linear scan in a list. By maintaining a transient `HashMap<String, Book>` (`rfidToBookMap`), RFID lookup operations execute in average $O(1)$ constant time.
-
-#### Q4: How does your Reservation Queue demonstrate FIFO behavior?
-**Answer:** The `ReservationService` uses a Java `Queue<Reservation>` implemented via `LinkedList<Reservation>`. When multiple students reserve the same checked-out book, their requests are queued in chronological order (`queue.offer()`). When the book is returned, `ReservationService.activateNext()` queries the queue and activates the student who reserved it first.
-
-#### Q5: How is data persistence handled and protected against corruption?
-**Answer:** Persistence is achieved via Java Object Serialization in `DataStore.java`. To prevent corruption:
-1. Before overwriting `nexlib-data.ser`, the existing file is automatically copied to `nexlib-data.ser.bak`.
-2. A JVM shutdown hook (`Runtime.getRuntime().addShutdownHook`) ensures that even if the user terminates the terminal unexpectedly (e.g. Ctrl+C), the current library state is flushed to disk.
-3. Custom deserialization logic (`readObject()`) automatically repopulates non-serializable transient indices (`rfidToBookMap`).
-
-#### Q6: How are custom exceptions used to improve application reliability?
-**Answer:** Instead of relying on generic runtime errors or returning null, the system defines a checked exception hierarchy under `LibraryException` (`BookNotFoundException`, `BookUnavailableException`, `DuplicateBookException`, etc.). The controller catches these exceptions and displays friendly error messages without crashing the program.
-
----
-*Report Compiled & Verified for University Examination.*
+For targeted viva voce questions and answers, refer to [`EVALUATION_VIVA_GUIDE.md`](file:///c:/Users/Asus/Downloads/NexLib_15_Files/EVALUATION_VIVA_GUIDE.md).

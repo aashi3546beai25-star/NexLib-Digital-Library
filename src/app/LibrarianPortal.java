@@ -1,156 +1,103 @@
 package app;
 
 import exception.LibraryException;
-import model.Book;
-import model.IssueRecord;
-import model.Librarian;
-import model.Student;
+import model.*;
 import service.LibraryService;
 import storage.DataStore;
 import util.ConsoleFormatter;
 import util.InputHelper;
-import util.RFIDScanner;
 
 import java.util.List;
 
 /**
- * Controller for the Librarian administrative portal (6 core options).
+ * Administrative portal for library staff.
  */
 public class LibrarianPortal {
-    private final LibraryService library;
+    private final LibraryService svc;
     private final DataStore store;
 
-    public LibrarianPortal(LibraryService library, DataStore store) {
-        this.library = library;
-        this.store = store;
-    }
+    public LibrarianPortal(LibraryService s, DataStore st) { this.svc = s; this.store = st; }
 
     public void login() {
-        ConsoleFormatter.printSubHeader("LIBRARIAN SECURE LOGIN");
-        System.out.println("(Default Credentials: Username = admin | Password = admin123)");
-
-        for (int attempts = 1; attempts <= 3; attempts++) {
-            String user = InputHelper.readLine("Enter Librarian Username: ");
-            String pass = InputHelper.readPassword("Enter Password: ");
-
-            Librarian librarian = library.authenticateLibrarian(user, pass);
-            if (librarian != null) {
-                System.out.println("\n[SUCCESS] Welcome, " + librarian.getName() + " (" + librarian.getDesignation() + ")!");
-                menu(librarian);
-                return;
-            }
-            System.out.println("\n[ERROR] Invalid credentials! Remaining attempts: " + (3 - attempts));
+        ConsoleFormatter.printHeader("LIBRARIAN ADMINISTRATIVE ACCESS");
+        System.out.println("TIP: Default username = admin, password = admin123");
+        for (int i = 0; i < 3; i++) {
+            String u = InputHelper.readLine("Username: ");
+            String p = InputHelper.readLine("Password: ");
+            Librarian lib = svc.authLibrarian(u, p);
+            if (lib != null) { menu(lib); return; }
+            System.out.println("ERROR: Invalid login. Remaining attempts: " + (2 - i));
         }
-        System.out.println("\n[WARNING] Maximum login attempts exceeded. Returning to main menu.");
-        InputHelper.pressEnterToContinue();
     }
 
-    public void menu(Librarian librarian) {
+    private void menu(Librarian lib) {
         boolean active = true;
         while (active) {
-            ConsoleFormatter.printHeader("LIBRARIAN CONSOLE | Staff: " + librarian.getName());
-            System.out.println(" 1. Add Book (With RFID)");
-            System.out.println(" 2. View All Books In Catalog");
-            System.out.println(" 3. Add Student (Register)");
-            System.out.println(" 4. Issue Book (RFID Scan)");
-            System.out.println(" 5. Return Book (RFID Scan & Fine Check)");
+            ConsoleFormatter.printHeader("LIBRARIAN CONSOLE | " + lib.getName());
+            System.out.println(" 1. Add Book to Catalog");
+            System.out.println(" 2. View Books");
+            System.out.println(" 3. Register Student / Directory");
+            System.out.println(" 4. Issue Book to Student");
+            System.out.println(" 5. Accept Return & Assess Fine");
             System.out.println(" 6. Logout");
             ConsoleFormatter.printDivider();
 
-            int choice = InputHelper.readInt("Enter choice (1-6): ", 1, 6);
+            int ch = InputHelper.readInt("Enter choice: ", 1, 6);
             try {
-                switch (choice) {
-                    case 1 -> addBook();
-                    case 2 -> { ConsoleFormatter.printBookTable(library.getBooks()); InputHelper.pressEnterToContinue(); }
-                    case 3 -> studentFlow();
-                    case 4 -> issueBookFlow(null);
-                    case 5 -> returnBookFlow(null);
-                    case 6 -> { active = false; System.out.println("\n[INFO] Librarian logged out."); }
+                switch (ch) {
+                    case 1 -> {
+                        String id = InputHelper.readLine("Enter Book ID: ");
+                        String title = InputHelper.readLine("Enter Title: ");
+                        String author = InputHelper.readLine("Enter Author: ");
+                        String cat = InputHelper.readLine("Enter Category: ");
+                        String shelf = InputHelper.readLine("Enter Shelf Rack: ");
+                        svc.addBook(new Book(id, title, author, cat, shelf));
+                        System.out.println("SUCCESS: Book added successfully.");
+                    }
+                    case 2 -> {
+                        System.out.println("1. Natural ID | 2. Title | 3. Author | 4. Category | 5. Reverse");
+                        int s = InputHelper.readInt("Select: ", 1, 5);
+                        List<Book> list = switch (s) {
+                            case 1 -> svc.getBooks().stream().sorted().toList();
+                            case 2 -> svc.getSortedBooks(BookComparators.BY_TITLE);
+                            case 3 -> svc.getSortedBooks(BookComparators.BY_AUTHOR);
+                            case 4 -> svc.getSortedBooks(BookComparators.BY_CATEGORY);
+                            case 5 -> svc.getBooksReversedWithListIterator();
+                            default -> svc.getBooks();
+                        };
+                        ConsoleFormatter.printBookTable(list);
+                    }
+                    case 3 -> {
+                        System.out.println("1. Register Student | 2. View Directory");
+                        if (InputHelper.readInt("Choice: ", 1, 2) == 1) {
+                            String sid = InputHelper.readLine("Student ID: ");
+                            String name = InputHelper.readLine("Name: ");
+                            String dept = InputHelper.readLine("Department: ");
+                            svc.registerStudent(new Student(sid, name, dept));
+                            System.out.println("SUCCESS: Student registered! Default pass: pass123");
+                        } else {
+                            ConsoleFormatter.printStudentTable(svc.getStudents());
+                        }
+                    }
+                    case 4 -> {
+                        String sid = InputHelper.readLine("Student ID: ");
+                        String bid = InputHelper.readLine("Book ID: ");
+                        IssueRecord r = svc.issueBook(sid, bid);
+                        System.out.println("SUCCESS: Book issued! Txn: " + r.getTxnId() + " | Due: " + r.getDueDate());
+                    }
+                    case 5 -> {
+                        String sid = InputHelper.readLine("Student ID: ");
+                        String bid = InputHelper.readLine("Book ID: ");
+                        double fine = svc.returnBook(sid, bid);
+                        System.out.println("SUCCESS: Book returned! Fine: Rs. " + fine);
+                    }
+                    case 6 -> active = false;
                 }
-                store.save(library);
-            } catch (LibraryException ex) {
-                System.out.println("\n[ERROR] Operation Failed: " + ex.getMessage());
-                InputHelper.pressEnterToContinue();
+                store.save(svc);
+            } catch (Exception e) {
+                System.out.println("ERROR: " + e.getMessage());
             }
+            InputHelper.pressEnterToContinue();
         }
-    }
-
-    private void addBook() throws LibraryException {
-        ConsoleFormatter.printSubHeader("ADD NEW BOOK TO CATALOG");
-        String id = InputHelper.readLine("Enter Unique Book ID (e.g. B107): ");
-        String title = InputHelper.readLine("Enter Title: ");
-        String author = InputHelper.readLine("Enter Author: ");
-        String category = InputHelper.readLine("Enter Category: ");
-        String shelf = InputHelper.readLine("Enter Shelf Location (e.g. Rack-CS-1): ");
-
-        String suggestedRfid = RFIDScanner.generateTag(id);
-        System.out.println("Default Tag UID: " + suggestedRfid);
-        String rfid = InputHelper.readLine("Enter/Confirm RFID Tag UID: ");
-        if (rfid.isEmpty()) rfid = suggestedRfid;
-
-        library.addBook(new Book(id, title, author, category, rfid, shelf));
-        System.out.println("\n[SUCCESS] Book successfully added and mapped to RFID: [" + rfid + "].");
-        InputHelper.pressEnterToContinue();
-    }
-
-    private void studentFlow() throws LibraryException {
-        ConsoleFormatter.printSubHeader("STUDENT MANAGEMENT");
-        System.out.println("1. Add New Student | 2. View All Registered Students");
-        int opt = InputHelper.readInt("Select (1-2): ", 1, 2);
-        if (opt == 1) {
-            registerStudent();
-        } else {
-            displayStudents();
-        }
-    }
-
-    private void registerStudent() throws LibraryException {
-        ConsoleFormatter.printSubHeader("ADD NEW STUDENT");
-        String id = InputHelper.readLine("Enter Student ID (e.g. STU104): ");
-        String name = InputHelper.readLine("Enter Student Name: ");
-        String dept = InputHelper.readLine("Enter Department: ");
-
-        library.registerStudent(new Student(id, name, dept));
-        System.out.println("\n[SUCCESS] Student added successfully! Can now log in using ID: " + id + " (Password: pass123)");
-        InputHelper.pressEnterToContinue();
-    }
-
-    private void displayStudents() {
-        ConsoleFormatter.printSubHeader("REGISTERED STUDENTS DIRECTORY");
-        List<Student> list = library.getStudents();
-        ConsoleFormatter.printStudentTable(list);
-        InputHelper.pressEnterToContinue();
-    }
-
-    public void issueBookFlow(String studentId) throws LibraryException {
-        ConsoleFormatter.printSubHeader("ISSUE BOOK (RFID ASSISTED)");
-        if (studentId == null) {
-            studentId = InputHelper.readLine("Enter Student ID: ");
-        }
-        String rfid = RFIDScanner.scan("Scan book RFID tag: ");
-        IssueRecord record = library.issueBook(studentId, rfid);
-
-        System.out.println("\n[SUCCESS] BOOK ISSUED SUCCESSFULLY!");
-        System.out.println("Txn ID   : " + record.getRecordId());
-        System.out.println("Book     : " + record.getBookTitle() + " (ID: " + record.getBookId() + ")");
-        System.out.println("Due Date : " + record.getDueDate() + " (Borrow Period: 7 days)");
-        InputHelper.pressEnterToContinue();
-    }
-
-    public void returnBookFlow(String studentId) throws LibraryException {
-        ConsoleFormatter.printSubHeader("RETURN BOOK (RFID ASSISTED)");
-        if (studentId == null) {
-            studentId = InputHelper.readLine("Enter Student ID: ");
-        }
-        String rfid = RFIDScanner.scan("Scan returned book RFID tag: ");
-        double fine = library.returnBook(studentId, rfid);
-
-        System.out.println("\n[SUCCESS] Book returned successfully to library stock!");
-        if (fine > 0) {
-            System.out.println("\n[WARNING] Overdue fine assessed: Rs. " + fine);
-        } else {
-            System.out.println("\n[INFO] Returned on time. No overdue fine.");
-        }
-        InputHelper.pressEnterToContinue();
     }
 }
