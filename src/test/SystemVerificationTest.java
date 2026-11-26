@@ -1,6 +1,7 @@
 package test;
 
-import exception.*;
+import exception.LibraryException;
+import exception.LibraryException.*;
 import model.*;
 import service.*;
 import storage.CsvDataService;
@@ -23,7 +24,7 @@ public class SystemVerificationTest {
         check(1, "Input Validation & Custom Exceptions", () -> {
             LibraryService s = new LibraryService();
             s.seedInitialData();
-            try { s.addBook(null); throw new AssertionError("Null check failed"); } catch (LibraryException.InvalidInputException ignored) {}
+            try { s.addBook(null); throw new AssertionError("Null check failed"); } catch (InvalidInputException ignored) {}
             try { s.addBook(new Book("B101", "Dup", "A", "C", "S")); throw new AssertionError("Dup check failed"); } catch (DuplicateBookException ignored) {}
             try { s.issueBook("STU101", "NO_BOOK"); throw new AssertionError("Not found check failed"); } catch (BookNotFoundException ignored) {}
         });
@@ -68,9 +69,9 @@ public class SystemVerificationTest {
                     new Book("B2", "Zulu", "Bob", "C", "S"),
                     new Book("B1", "Alpha", "Alice", "C", "S")
             ));
-            list.sort(BookComparators.BY_TITLE);
+            list.sort(Book.BY_TITLE);
             if (!list.get(0).getTitle().equals("Alpha")) throw new AssertionError("BY_TITLE comparator failed");
-            list.sort(BookComparators.BY_AUTHOR);
+            list.sort(Book.BY_AUTHOR);
             if (!list.get(0).getAuthor().equals("Alice")) throw new AssertionError("BY_AUTHOR comparator failed");
         });
 
@@ -139,12 +140,13 @@ public class SystemVerificationTest {
         total++;
         try {
             test.run();
-            passed++;
             System.out.printf("PASS: Scenario %2d: %s%n", id, name);
-        } catch (Throwable t) {
-            System.err.printf("FAIL: Scenario %2d: %s -> %s%n", id, name, t.getMessage());
+            passed++;
+        } catch (Throwable e) {
+            System.out.printf("FAIL: Scenario %2d: %s | Error: %s%n", id, name, e.getMessage());
         }
     }
 
-    @FunctionalInterface interface Action { void run() throws Exception; }
+    @FunctionalInterface
+    interface Action { void run() throws Exception; }
 }

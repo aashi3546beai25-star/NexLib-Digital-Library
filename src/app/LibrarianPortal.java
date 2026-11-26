@@ -59,9 +59,9 @@ public class LibrarianPortal {
                         int s = InputHelper.readInt("Select: ", 1, 5);
                         List<Book> list = switch (s) {
                             case 1 -> svc.getBooks().stream().sorted().toList();
-                            case 2 -> svc.getSortedBooks(BookComparators.BY_TITLE);
-                            case 3 -> svc.getSortedBooks(BookComparators.BY_AUTHOR);
-                            case 4 -> svc.getSortedBooks(BookComparators.BY_CATEGORY);
+                            case 2 -> svc.getSortedBooks(Book.BY_TITLE);
+                            case 3 -> svc.getSortedBooks(Book.BY_AUTHOR);
+                            case 4 -> svc.getSortedBooks(Book.BY_CATEGORY);
                             case 5 -> svc.getBooksReversedWithListIterator();
                             default -> svc.getBooks();
                         };

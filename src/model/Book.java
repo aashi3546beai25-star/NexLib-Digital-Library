@@ -1,12 +1,18 @@
 package model;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 /**
- * Book model implementing Comparable<Book> for natural sorting (Lectures 23-25).
+ * Book model implementing Comparable for natural sorting and basic Comparators.
  */
 public class Book implements Serializable, Comparable<Book> {
     private static final long serialVersionUID = 1L;
+
+    public static final Comparator<Book> BY_TITLE = Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER);
+    public static final Comparator<Book> BY_AUTHOR = Comparator.comparing(Book::getAuthor, String.CASE_INSENSITIVE_ORDER);
+    public static final Comparator<Book> BY_CATEGORY = Comparator.comparing(Book::getCategory, String.CASE_INSENSITIVE_ORDER);
+
     private String id, title, author, category, shelf;
     private boolean available = true;
 
@@ -28,7 +34,7 @@ public class Book implements Serializable, Comparable<Book> {
 
     @Override
     public int compareTo(Book o) {
-        return this.id.compareToIgnoreCase(o.id); // Natural order by Book ID
+        return this.id.compareToIgnoreCase(o.id);
     }
 
     @Override

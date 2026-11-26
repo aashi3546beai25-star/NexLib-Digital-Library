@@ -97,8 +97,8 @@
 
 #### Q3: "Explain Comparable vs Comparator in your project (Lect 23–25)."
 > *"1. **`Comparable<Book>`:** Implemented in `Book.java` for natural ordering by Book ID (`compareTo(Book other)`).*
-> *2. **`Comparator<Book>`:** Created in `BookComparators.java` with multiple sorting strategies (`BY_TITLE`, `BY_AUTHOR`, `BY_CATEGORY`). Users can dynamically select their preferred sort order in the Librarian menu."*
-- **File to open:** `src/model/Book.java` and `src/model/BookComparators.java`.
+> *2. **`Comparator<Book>`:** Defined directly in `Book.java` with multiple sorting strategies (`BY_TITLE`, `BY_AUTHOR`, `BY_CATEGORY`). Users can dynamically select their preferred sort order in the Librarian menu."*
+- **File to open:** `src/model/Book.java`.
 
 #### Q4: "Show me Multithreading and Daemon Threads in your code (Lect 26–29)."
 > *"In `BackgroundAuditDaemon.java`, we implemented `Runnable`. The daemon thread runs in the background (`setDaemon(true)`) with lower priority (`Thread.NORM_PRIORITY - 1`). It periodically executes audit scans every 10 seconds via `Thread.sleep()`. We can inspect its lifecycle states (`NEW`, `RUNNABLE`, `TIMED_WAITING`, `TERMINATED`), and stop it cleanly using `interrupt()` and `join()`."*

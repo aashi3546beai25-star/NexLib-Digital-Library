@@ -21,7 +21,7 @@ Manual and outdated library management systems in academic institutions frequent
 
 **NexLib** is a robust, modular, menu-driven Core Java console application that automates college library circulation and administration. Developed strictly using pure Core Java (JDK 17+) without reliance on external frameworks or third-party web libraries, NexLib implements a clean layered architecture across seven core packages (`app`, `model`, `service`, `storage`, `util`, `exception`, and `test`).
 
-The system integrates all foundational topics taught across Lectures 13 to 54 of the Chitkara University Course Plan across 28 modular, concise files organized in 7 standard packages:
+The system integrates all foundational topics taught across Lectures 13 to 54 of the Chitkara University Course Plan across exactly 20 basic, modular files organized in 7 standard packages:
 1. **Object-Oriented Programming (OOP) Paradigms:** **Abstraction** via abstract base classes (`User`); **Encapsulation** through private state mutators with boundary checks; **Inheritance** via specialized role hierarchies (`Student`, `Librarian`); **Polymorphism** through dynamic dispatch; **Method Overloading** in multi-criteria searches; and **Method Overriding** for entity representation.
 2. **Collections Framework & Sorting (Lectures 16–25):** `ArrayList` for dynamic records, `HashMap` for constant-time $O(1)$ Book ID indexing, `Queue`/`LinkedList` for FIFO reservation queues, `TreeSet` for alphabetically sorted categories, `HashSet` for distinct active borrower tracking, `TreeMap` for category-grouped catalog indexing, `Iterator`/`ListIterator` for safe traversal, `Comparable<Book>` for natural sorting, and custom `Comparator` strategies (`BY_TITLE`, `BY_AUTHOR`, `BY_CATEGORY`).
 3. **Multithreading & Concurrency (Lectures 26–33):** Background daemon thread (`BackgroundAuditDaemon`) performing periodic overdue audits using `Thread.sleep()`, thread lifecycle tracking (`NEW`, `RUNNABLE`, `TIMED_WAITING`, `TERMINATED`), synchronization locks, and inter-thread producer-consumer monitor coordination using `wait()` and `notifyAll()` (`BookReturnNotifier`).
@@ -148,9 +148,9 @@ The primary objective of NexLib is to develop a modular, zero-dependency console
 ### 4.1 Modular Package Architecture
 
 The project is structured into seven decoupled packages adhering to clean architecture:
-- `app`: Application entry point (`Main`), main router (`LibraryApp`), and UI portals (`LibrarianPortal`, `StudentPortal`, `CatalogPortal`).
-- `model`: Domain entities (`Book`, `BookComparators`, `User`, `Student`, `Librarian`, `IssueRecord`, `Reservation`).
-- `service`: Business services (`LibraryService`, `BackgroundAuditDaemon`, `BookReturnNotifier`, `FineService`, `ReservationService`, `ReportService`).
+- `app`: Application entry point (`Main`), main router & catalog browser (`LibraryApp`), and UI portals (`LibrarianPortal`, `StudentPortal`).
+- `model`: Domain entities (`Book`, `User`, `Student`, `Librarian`, `IssueRecord`, `Reservation`).
+- `service`: Business coordinator (`LibraryService`), multithreading daemon (`BackgroundAuditDaemon`), and inter-thread monitor (`BookReturnNotifier`).
 - `storage`: Persistence layers (`DataStore` for Byte Streams; `CsvDataService` for Character Streams).
 - `util`: Infrastructure utilities (`ConsoleFormatter`, `InputHelper`, `DataResult`).
 - `exception`: Domain checked exception hierarchy rooted in `LibraryException`.
@@ -264,7 +264,7 @@ classDiagram
 | `TreeMap<String, List<Book>>` | `getBooksGroupedByCategory()` | Navigable map ordering book lists by category key. |
 | `Queue<Reservation>` (`LinkedList`) | Reservation waiting list | FIFO queue guaranteeing fair allocation upon book return. |
 | `Comparable<Book>` | `Book.java` | Natural ordering by Book ID (`compareTo(Book other)`). |
-| `Comparator<Book>` | `BookComparators.java` | Strategy pattern providing `BY_TITLE`, `BY_AUTHOR`, and `BY_CATEGORY` sorting. |
+| `Comparator<Book>` | `Book.java` | Strategy pattern providing `BY_TITLE`, `BY_AUTHOR`, and `BY_CATEGORY` sorting. |
 | `ListIterator<Book>` | `getBooksReversedWithListIterator()` | Bidirectional traversal demonstrating reverse iteration without index math. |
 | `Iterator<IssueRecord>` | `purgeOldReturnedRecords()` | Fail-safe element deletion preventing `ConcurrentModificationException`. |
 
@@ -357,7 +357,7 @@ Testing was conducted using interactive user walkthroughs and the automated 13-p
 | **4** | Map Collections (Lect 20–22) | `HashMap` & `TreeMap` | $O(1)$ ID lookup; `TreeMap` groups books alphabetically. | **PASS** |
 | **5** | Traversals (Lect 20–22) | `Iterator` & `ListIterator` | Safe element removal and reverse catalog traversal. | **PASS** |
 | **6** | Comparable Natural Order (Lect 23–25) | `Book.compareTo(Book)` | Natural ordering by Book ID confirmed. | **PASS** |
-| **7** | Comparator Sorting (Lect 23–25) | `BookComparators.BY_TITLE` | Alphabetical title sorting confirmed. | **PASS** |
+| **7** | Comparator Sorting (Lect 23–25) | `Book.BY_TITLE` | Alphabetical title sorting confirmed. | **PASS** |
 | **8** | Multithreading Daemon (Lect 26–29) | `BackgroundAuditDaemon` | `NEW`, `RUNNABLE`, `TIMED_WAITING` states and daemon execution. | **PASS** |
 | **9** | Inter-Thread Sync (Lect 32–33) | `BookReturnNotifier` | `wait()` consumer awakened by `notifyAll()` producer signal. | **PASS** |
 | **10** | Stream API Pipelines (Lect 43–46) | `filter`, `map`, `sorted`, `limit` | Availability filter, title mapping, and pagination confirmed. | **PASS** |

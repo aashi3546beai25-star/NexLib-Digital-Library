@@ -1,6 +1,6 @@
 package service;
 
-import exception.*;
+import exception.LibraryException;
 import exception.LibraryException.*;
 import model.*;
 
@@ -11,10 +11,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Main business service coordinating books, students, loans, and reservations.
+ * Main business service coordinating books, students, circulation loans, and reservations.
  */
 public class LibraryService implements Serializable {
     private static final long serialVersionUID = 1L;
+    public static final double FINE_PER_DAY = 5.0;
 
     private List<Book> books = new ArrayList<>();
     private List<Student> students = new ArrayList<>();
@@ -103,6 +104,35 @@ public class LibraryService implements Serializable {
     }
     public List<Student> getStudents() { return students; }
 
+    public Queue<Reservation> getReservationQueue(String bookId) {
+        Queue<Reservation> q = new LinkedList<>();
+        for (Reservation r : reservations) {
+            if (r.getBookId().equalsIgnoreCase(bookId) && "WAITING".equals(r.getStatus())) {
+                q.offer(r);
+            }
+        }
+        return q;
+    }
+
+    public static double calculateFine(LocalDate due, LocalDate ret) {
+        if (due == null || ret == null) return 0.0;
+        long days = Math.max(0, ChronoUnit.DAYS.between(due, ret));
+        return days * FINE_PER_DAY;
+    }
+
+    public static void printFineReceipt(String stuId, String bookId, LocalDate due, LocalDate ret, double fine) {
+        System.out.println("\n+-------------------------------------------------------------+");
+        System.out.println("|                   NEXLIB OVERDUE FINE RECEIPT              |");
+        System.out.println("+-------------------------------------------------------------+");
+        System.out.printf("| Student ID : %-47s |%n", stuId);
+        System.out.printf("| Book ID    : %-47s |%n", bookId);
+        System.out.printf("| Due Date   : %-47s |%n", due);
+        System.out.printf("| Return Date: %-47s |%n", ret);
+        System.out.printf("| Overdue Day: %-47d |%n", Math.max(0, ChronoUnit.DAYS.between(due, ret)));
+        System.out.printf("| Total Fine : Rs. %-43.2f |%n", fine);
+        System.out.println("+-------------------------------------------------------------+");
+    }
+
     public synchronized IssueRecord issueBook(String stuId, String bookId) throws LibraryException {
         Student stu = findStudent(stuId);
         if (stu == null) throw new StudentNotFoundException("Student ID not found: " + stuId);
@@ -113,7 +143,7 @@ public class LibraryService implements Serializable {
         long count = issueRecords.stream().filter(r -> r.getStudentId().equalsIgnoreCase(stuId) && !r.isReturned()).count();
         if (count >= stu.getMaxBooks()) throw new LibraryException("Borrow limit reached: " + stu.getMaxBooks() + " books.");
 
-        Queue<Reservation> q = ReservationService.getWaitingQueue(reservations, book.getId());
+        Queue<Reservation> q = getReservationQueue(book.getId());
         if (!q.isEmpty()) {
             Reservation top = q.peek();
             if (!top.getStudentId().equalsIgnoreCase(stuId)) throw new BookUnavailableException("Reserved for student: " + top.getStudentId());
@@ -139,14 +169,14 @@ public class LibraryService implements Serializable {
                 .findFirst().orElseThrow(() -> new LibraryException("No active loan found."));
 
         LocalDate today = LocalDate.now();
-        double fine = FineService.calculate(r.getDueDate(), today);
+        double fine = calculateFine(r.getDueDate(), today);
         r.completeReturn(today, fine);
         book.setAvailable(true);
 
-        if (fine > 0) FineService.printReceipt(stuId, bookId, r.getDueDate(), today, fine);
+        if (fine > 0) printFineReceipt(stuId, bookId, r.getDueDate(), today, fine);
         if (returnNotifier != null) returnNotifier.signalBookReturned(book.getId());
 
-        Queue<Reservation> q = ReservationService.getWaitingQueue(reservations, book.getId());
+        Queue<Reservation> q = getReservationQueue(book.getId());
         if (!q.isEmpty()) {
             Reservation next = q.peek();
             next.setStatus("AVAILABLE");

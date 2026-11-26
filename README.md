@@ -74,7 +74,7 @@ The following matrix documents the exact mapping of Chitkara University syllabus
 | **Lect 13–15** | Strings, Wrappers, Input Validation, Exception Handling | Custom exception hierarchy rooted in `LibraryException`; safe terminal input parsing. | `LibraryException.java`, `Main.java` (`Console`) |
 | **Lect 16–19** | Collections Framework: `ArrayList`, `LinkedList`, `HashSet`, `TreeSet` | Dynamic catalog lists (`ArrayList`); queue reservations (`LinkedList`); unique borrower tracking (`HashSet`); alphabetically sorted categories (`TreeSet`). | `LibraryService.java` |
 | **Lect 20–22** | `HashMap`, `TreeMap`, `Queue`, `Iterator`, `ListIterator` | $O(1)$ constant-time Book ID indexing (`HashMap`); category-grouped inventory (`TreeMap`); backwards catalog traversal (`ListIterator`); safe element deletion (`Iterator`). | `LibraryService.java` |
-| **Lect 23–25** | `Comparable`, `Comparator`, Sorting & Collections Utilities | Natural ordering by Book ID (`Comparable<Book>`); custom sort strategies by Title, Author, Category (`BookComparators`); `Collections.sort()`. | `Models.java` |
+| **Lect 23–25** | `Comparable`, `Comparator`, Sorting & Collections Utilities | Natural ordering by Book ID (`Comparable<Book>`); custom sort strategies by Title, Author, Category (`Book.BY_TITLE`, etc.); `Collections.sort()`. | `Book.java` |
 | **Lect 26–29** | Multithreading: `Thread`, `Runnable`, States, Daemon Threads, `sleep()`, `join()`, `interrupt()` | Background daemon thread scanning overdue loans every 10 seconds; lifecycle tracking (`NEW`, `RUNNABLE`, `TIMED_WAITING`, `TERMINATED`). | `LibraryService.java` (`BackgroundAuditDaemon`) |
 | **Lect 30–31** | Synchronization, Race Conditions, Critical Sections, Intrinsic Locks | Synchronized methods on `LibraryService` protecting shared book and loan collections against concurrent modification. | `LibraryService.java` |
 | **Lect 32–33** | Inter-Thread Communication: `wait()`, `notify()`, `notifyAll()`, Guarded Blocks | Producer-consumer monitor waking waiting reservation threads upon book return using guarded `while` loops. | `LibraryService.java` (`BookReturnNotifier`) |
@@ -85,9 +85,9 @@ The following matrix documents the exact mapping of Chitkara University syllabus
 
 ---
 
-## 5. Complete Package & File Architecture (28 Modular Files)
+## 5. Complete Package & File Architecture (20 Basic Files)
 
-The project is cleanly divided across 7 decoupled packages with 28 concise, short files:
+The project is cleanly divided across 7 decoupled packages with exactly 20 concise, basic files:
 
 ```text
 NexLib_15_Files/
@@ -98,40 +98,32 @@ NexLib_15_Files/
 ├── out/                                # Compiled JVM bytecode (.class files)
 └── src/
     ├── app/
-    │   ├── Main.java                   # Entry point with JVM shutdown hook (~20 lines)
-    │   ├── LibraryApp.java             # Main menu coordinator (~45 lines)
-    │   ├── LibrarianPortal.java        # Administrative console (~100 lines)
-    │   ├── StudentPortal.java          # Student self-service circulation (~80 lines)
-    │   └── CatalogPortal.java          # Open guest catalog browser (~40 lines)
+    │   ├── Main.java                   # Entry point with JVM shutdown hook (~16 lines)
+    │   ├── LibraryApp.java             # Main menu coordinator & catalog browser (~66 lines)
+    │   ├── LibrarianPortal.java        # Administrative console (~96 lines)
+    │   └── StudentPortal.java          # Student self-service circulation (~85 lines)
     ├── exception/
-    │   ├── LibraryException.java       # Root domain checked exception (~20 lines)
-    │   ├── BookNotFoundException.java  # Thrown when Book ID is missing (~10 lines)
-    │   ├── BookUnavailableException.java # Thrown when checking out an issued book (~10 lines)
-    │   └── DuplicateBookException.java # Thrown on duplicate book additions (~10 lines)
+    │   └── LibraryException.java       # Root domain checked exception & nested hierarchy (~22 lines)
     ├── model/
-    │   ├── User.java                   # Abstract base class demonstrating Abstraction (~25 lines)
-    │   ├── Student.java                # Student model inheriting from User (~30 lines)
-    │   ├── Librarian.java              # Librarian staff model inheriting from User (~25 lines)
-    │   ├── Book.java                   # Encapsulated book implementing Comparable<Book> (~45 lines)
-    │   ├── BookComparators.java        # Custom Comparator strategies (Title, Author, Category) (~15 lines)
-    │   ├── IssueRecord.java            # Circulation transaction record with fine math (~50 lines)
-    │   └── Reservation.java            # FIFO waiting queue model (~30 lines)
+    │   ├── User.java                   # Abstract base class demonstrating Abstraction (~19 lines)
+    │   ├── Student.java                # Student model inheriting from User (~23 lines)
+    │   ├── Librarian.java              # Librarian staff model inheriting from User (~17 lines)
+    │   ├── Book.java                   # Book model with Comparable and Comparators (~39 lines)
+    │   ├── IssueRecord.java            # Circulation transaction record with fine math (~41 lines)
+    │   └── Reservation.java            # FIFO waiting queue model (~22 lines)
     ├── service/
-    │   ├── LibraryService.java         # Core business coordinator with Collections & Streams (~130 lines)
-    │   ├── BackgroundAuditDaemon.java  # Multithreaded daemon thread for periodic audits (~50 lines)
-    │   ├── BookReturnNotifier.java     # Inter-thread synchronization monitor (wait/notifyAll) (~30 lines)
-    │   ├── FineService.java            # Overdue fee rules (Rs. 5/day) & ASCII invoice printer (~30 lines)
-    │   ├── ReservationService.java     # Queue/LinkedList FIFO manager (~20 lines)
-    │   └── ReportService.java          # Executive summary & category distribution (~25 lines)
+    │   ├── LibraryService.java         # Core business coordinator with Collections & Streams (~240 lines)
+    │   ├── BackgroundAuditDaemon.java  # Multithreaded daemon thread for periodic audits (~46 lines)
+    │   └── BookReturnNotifier.java     # Inter-thread synchronization monitor (wait/notifyAll) (~25 lines)
     ├── storage/
-    │   ├── DataStore.java              # Byte Streams serialization (FileInputStream/FileOutputStream) (~40 lines)
-    │   └── CsvDataService.java         # Character Streams CSV import/export (FileReader/FileWriter) (~50 lines)
+    │   ├── DataStore.java              # Byte Streams serialization (FileInputStream/FileOutputStream) (~37 lines)
+    │   └── CsvDataService.java         # Character Streams CSV import/export (FileReader/FileWriter) (~42 lines)
     ├── util/
-    │   ├── ConsoleFormatter.java       # ASCII tabular layout formatters (~50 lines)
-    │   ├── InputHelper.java            # Safe terminal scanner preventing runtime crashes (~35 lines)
-    │   └── DataResult.java             # Generic response container & bounded wildcard utility (~30 lines)
+    │   ├── ConsoleFormatter.java       # ASCII tabular layout formatters (~44 lines)
+    │   ├── InputHelper.java            # Safe terminal scanner preventing runtime crashes (~31 lines)
+    │   └── DataResult.java             # Generic response container & bounded wildcard utility (~25 lines)
     └── test/
-        └── SystemVerificationTest.java # 13-Point Automated University Syllabus Verification Suite (~110 lines)
+        └── SystemVerificationTest.java # 13-Point Automated University Syllabus Verification Suite (~132 lines)
 ```
 
 ---
@@ -195,7 +187,7 @@ NexLib_15_Files/
 cd c:\Users\Asus\Downloads\NexLib_15_Files
 ```
 
-### Step 2: Compile All 28 Source Files
+### Step 2: Compile All 20 Source Files
 Compile all Java source files into the `out` directory:
 ```powershell
 & "C:\Program Files\Java\jdk-26.0.1\bin\javac.exe" -d out (Get-ChildItem -Path src -Filter *.java -Recurse | ForEach-Object { $_.FullName })
